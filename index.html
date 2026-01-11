@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>প্রফেশনাল ফি ম্যানেজমেন্ট সিস্টেম - অটো নাম আপডেট</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; padding: 20px; color: #333; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .school-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #1a73e8; padding-bottom: 15px; }
+        #headerLogo { width: 80px; height: 80px; object-fit: contain; margin: 0 auto 10px; border-radius: 50%; display: none; }
+        .school-info h1 { margin: 0; color: #1a73e8; font-size: 28px; }
+        .settings-panel { display: none; background: #fffde7; border: 1px dashed #fbc02d; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .settings-grid input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 95%; }
+        
+        /* এন্ট্রি বক্স ডিজাইন */
+        .input-box { background: #e3f2fd; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: 0.5fr 1.5fr 1fr 1fr; gap: 10px; }
+        .fee-selection { grid-column: span 4; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb; }
+        
+        .search-panel { background: #f1f8e9; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; align-items: flex-end; border: 1px solid #dcedc8; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #1a73e8; color: white; }
+        .total-row { background-color: #263238; color: #ffeb3b; font-weight: bold; }
+        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
+        .btn-save { background: #2e7d32; width: 100%; grid-column: span 4; padding: 12px; font-size: 16px; margin-top: 10px; }
+        
+        #studentNameDisplay { font-weight: bold; color: #1565c0; background: #fff; padding: 8px; border: 1px solid #90caf9; border-radius: 4px; height: 20px; display: flex; align-items: center; }
+
+        @media print { .no-print { display: none !important; } .container { width: 100%; border: none; box-shadow: none; padding: 0; } body { background: white; padding: 0; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="school-header">
+        <img id="headerLogo" src="" alt="Logo">
+        <div class="school-info">
+            <h1 id="headerName">প্রতিষ্ঠানের নাম</h1>
+            <p id="headerAddress">ঠিকানা ও মোবাইল নম্বর</p>
+        </div>
+    </div>
+
+    <div style="text-align: right;" class="no-print">
+        <button onclick="openSettings()" style="background:#546e7a; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer;">⚙️ সেটিংস</button>
+    </div>
+
+    <div id="settingsArea" class="settings-panel no-print">
+        <h3>🛠 কনফিগারেশন</h3>
+        <div class="settings-grid">
+            <input type="text" id="setSchoolName" placeholder="প্রতিষ্ঠানের নাম">
+            <input type="text" id="setSchoolAddr" placeholder="ঠিকানা">
+            <input type="text" id="setSchoolMob" placeholder="মোবাইল নম্বর">
+            <div><label>লোগো:</label><input type="file" id="setLogoFile" accept="image/*" onchange="previewLogo(this)"></div>
+        </div>
+        <div style="margin-top:15px;">
+            <button onclick="saveSettings()" class="btn" style="background:#2e7d32">সেভ করুন</button>
+            <button onclick="document.getElementById('settingsArea').style.display='none'" class="btn" style="background:#757575">বন্ধ করুন</button>
+        </div>
+    </div>
+
+    <div class="input-box no-print">
+        <div><label>রোল:</label><input type="number" id="rollInput" placeholder="রোল" style="width:90%; padding:10px;" oninput="findStudent()"></div>
+        <div><label>শিক্ষার্থীর নাম:</label><div id="studentNameDisplay">রোল লিখুন...</div></div>
+        <div><label>সেশন:</label><select id="sessionSelect" style="width:100%; padding:10px;"><option value="২০২৩-২০২৪">২০২৩-২০২৪</option><option value="২০২৪-২০২৫">২০২৪-২০২৫</option><option value="২০২৫-২০২৬">২০২৫-২০২৬</option></select></div>
+        <div><label>বিভাগ:</label><select id="groupSelect" style="width:100%; padding:10px;"><option value="Science">Science</option><option value="Arts">Arts</option><option value="Commerce">Commerce</option></select></div>
+        
+        <div style="grid-column: span 4; margin-bottom: 5px;"><label>তারিখ:</label><input type="date" id="entryDate" style="width:22%; padding:8px; margin-left: 10px;"></div>
+        
+        <div class="fee-selection">
+            <div>মাসিক <input type="number" id="valM" style="width:70px" placeholder="0"><input type="checkbox" id="checkM"></div>
+            <div>সেশন ফি <input type="number" id="valS" style="width:70px" placeholder="0"><input type="checkbox" id="checkS"></div>
+            <div>ফরম <input type="number" id="valF" style="width:70px" placeholder="0"><input type="checkbox" id="checkF"></div>
+            <div>পরীক্ষা <input type="number" id="valE" style="width:70px" placeholder="0"><input type="checkbox" id="checkE"></div>
+            <div>বকেয়া <input type="number" id="valDue" style="width:70px; color:red" placeholder="0"></div>
+        </div>
+        <button onclick="saveData()" class="btn btn-save">ডাটা সেভ করুন</button>
+    </div>
+
+    <div class="search-panel no-print">
+        <div><label>শুরুর তারিখ:</label><input type="date" id="startDate" onchange="updateTable()"></div>
+        <div><label>শেষ তারিখ:</label><input type="date" id="endDate" onchange="updateTable()"></div>
+        <div><label>সেশন:</label><select id="filterSession" onchange="updateTable()"><option value="">সব সেশন</option><option value="২০২৪-২০২৫">২০২৪-২০২৫</option><option value="২০২৫-২০২৬">২০২৫-২০২৬</option></select></div>
+        <div><label>বিভাগ:</label><select id="filterGroup" onchange="updateTable()"><option value="">সব</option><option value="Science">Science</option><option value="Arts">Arts</option><option value="Commerce">Commerce</option></select></div>
+        <div><label>সার্চ:</label><input type="text" id="searchKeyword" placeholder="নাম বা রোল..." onkeyup="updateTable()"></div>
+    </div>
+
+    <table id="feeTable">
+        <thead>
+            <tr><th>তারিখ</th><th>সেশন</th><th>নাম ও রোল</th><th>বিভাগ</th><th>আদায়</th><th>বকেয়া</th><th class="no-print">অ্যাকশন</th></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="4">সর্বমোট কালেকশন:</td>
+                <td id="grandTotal">0</td><td id="grandDue">0</td><td class="no-print"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="no-print" style="margin-top:20px; display:flex; gap:10px;">
+        <button onclick="exportData()" class="btn" style="background:#17a2b8;">💾 ব্যাকআপ</button>
+        <button onclick="document.getElementById('importFile').click()" class="btn" style="background:#fbc02d; color:black;">📂 রিস্টোর</button>
+        <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+        <button onclick="window.print()" class="btn" style="background:#37474f;">🖨️ ফুল রিপোর্ট প্রিন্ট</button>
+    </div>
+</div>
+
+<script>
+    const CONFIG_PW = "1234"; 
+    let base64Logo = "";
+    const DB_NAME = 'universalDB_v4';
+
+    // শিক্ষার্থীর তালিকা (এখানে আপনি আপনার সব ছাত্রের নাম যোগ করবেন)
+    const students = [
+        { roll: 101, name: "রহিম আহমেদ" },
+        { roll: 102, name: "করিম উল্লাহ" },
+        { roll: 103, name: "সাব্বির হোসেন" },
+        { roll: 104, name: "জুবায়ের ইসলাম" },
+        { roll: 105, name: "ফারিয়া জান্নাত" }
+    ];
+
+    let selectedStudentName = "";
+
+    window.onload = function() {
+        loadSettings();
+        updateTable();
+    };
+
+    // রোল দিয়ে নাম খোঁজার ফাংশন
+    function findStudent() {
+        const roll = document.getElementById('rollInput').value;
+        const display = document.getElementById('studentNameDisplay');
+        const student = students.find(s => s.roll == roll);
+
+        if (student) {
+            display.innerText = student.name;
+            display.style.color = "#2e7d32"; // সবুজ রঙ যদি পাওয়া যায়
+            selectedStudentName = student.name + " (রোল: " + student.roll + ")";
+        } else {
+            display.innerText = roll ? "পাওয়া যায়নি!" : "রোল লিখুন...";
+            display.style.color = "red";
+            selectedStudentName = "";
+        }
+    }
+
+    function loadSettings() {
+        const config = JSON.parse(localStorage.getItem('appConfig')) || { name: "প্রতিষ্ঠানের নাম", addr: "ঠিকানা", mob: "মোবাইল", logo: "" };
+        document.getElementById('headerName').innerText = config.name;
+        document.getElementById('headerAddress').innerText = config.addr + " | " + config.mob;
+        if(config.logo) { document.getElementById('headerLogo').src = config.logo; document.getElementById('headerLogo').style.display = "block"; base64Logo = config.logo; }
+    }
+
+    function previewLogo(input) { if (input.files && input.files[0]) { let reader = new FileReader(); reader.onload = e => base64Logo = e.target.result; reader.readAsDataURL(input.files[0]); } }
+
+    function openSettings() { if(prompt("পাসওয়ার্ড দিন:") === CONFIG_PW) { document.getElementById('settingsArea').style.display = "block"; const config = JSON.parse(localStorage.getItem('appConfig')) || {}; document.getElementById('setSchoolName').value = config.name || ""; document.getElementById('setSchoolAddr').value = config.addr || ""; document.getElementById('setSchoolMob').value = config.mob || ""; } }
+
+    function saveSettings() {
+        const config = { name: document.getElementById('setSchoolName').value, addr: document.getElementById('setSchoolAddr').value, mob: document.getElementById('setSchoolMob').value, logo: base64Logo };
+        localStorage.setItem('appConfig', JSON.stringify(config));
+        alert("সেটিংস সেভ হয়েছে!");
+        location.reload();
+    }
+
+    function saveData() {
+        let session = document.getElementById('sessionSelect').value;
+        let group = document.getElementById('groupSelect').value;
+        let date = document.getElementById('entryDate').value;
+        let due = parseFloat(document.getElementById('valDue').value) || 0;
+        
+        if(!selectedStudentName) return alert("সঠিক রোল নম্বর দিন!");
+        if(!date) return alert("তারিখ সিলেক্ট করুন!");
+
+        let details = []; let paidTotal = 0;
+        const types = [{id:'checkM',v:'valM',l:'মাসিক'},{id:'checkS',v:'valS',l:'সেশন'},{id:'checkF',v:'valF',l:'ফরম'},{id:'checkE',v:'valE',l:'পরীক্ষা'}];
+        
+        types.forEach(item => {
+            if(document.getElementById(item.id).checked){
+                let amt = parseFloat(document.getElementById(item.v).value) || 0;
+                details.push(item.l+":"+amt); paidTotal += amt;
+            }
+        });
+
+        if(paidTotal <= 0 && due <= 0) return alert("আদায় বা বকেয়া ঘরে টাকা লিখুন!");
+
+        let history = JSON.parse(localStorage.getItem(DB_NAME)) || [];
+        history.push({ id: Date.now(), session, date, student: selectedStudentName, group, details: details.join(", "), paid: paidTotal, due: due });
+        localStorage.setItem(DB_NAME, JSON.stringify(history));
+        location.reload();
+    }
+
+    function updateTable() {
+        let history = JSON.parse(localStorage.getItem(DB_NAME)) || [];
+        let sD = document.getElementById('startDate').value;
+        let eD = document.getElementById('endDate').value;
+        let fS = document.getElementById('filterSession').value;
+        let fG = document.getElementById('filterGroup').value;
+        let key = document.getElementById('searchKeyword').value.toUpperCase();
+        let tableBody = document.getElementById('tableBody');
+        let tPaid = 0, tDue = 0; tableBody.innerHTML = "";
+        history.slice().reverse().forEach(item => {
+            if((!sD || item.date >= sD) && (!eD || item.date <= eD) && (!fS || item.session === fS) && (!fG || item.group === fG) && (item.student.toUpperCase().includes(key))) {
+                tPaid += item.paid; tDue += item.due;
+                tableBody.innerHTML += `<tr><td>${item.date}</td><td>${item.session}</td><td>${item.student}</td><td>${item.group}</td><td>${item.paid}</td><td style="color:red">${item.due}</td><td class="no-print"><button onclick="printReceipt(${item.id})" class="btn" style="background:#0288d1">রিসিট</button> <button onclick="deleteEntry(${item.id})" class="btn" style="background:red">মুছুন</button></td></tr>`;
+            }
+        });
+        document.getElementById('grandTotal').innerText = tPaid + " /-";
+        document.getElementById('grandDue').innerText = tDue + " /-";
+    }
+
+    function deleteEntry(id) { if(confirm("মুছবেন?")) { let h = JSON.parse(localStorage.getItem(DB_NAME)); localStorage.setItem(DB_NAME, JSON.stringify(h.filter(i => i.id !== id))); updateTable(); } }
+    function exportData() { const data = localStorage.getItem(DB_NAME); if(!data || data === "[]") return alert("ডাটা নেই!"); let blob = new Blob([data], {type: "application/json"}); let a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "backup_" + new Date().toISOString().slice(0,10) + ".json"; a.click(); }
+    function importData(e) { let reader = new FileReader(); reader.onload = ev => { try { JSON.parse(ev.target.result); localStorage.setItem(DB_NAME, ev.target.result); alert("রিস্টোর হয়েছে!"); location.reload(); } catch(err) { alert("ভুল ফাইল!"); } }; reader.readAsText(e.target.files[0]); }
+
+    function printReceipt(id) {
+        let item = JSON.parse(localStorage.getItem(DB_NAME)).find(i => i.id === id);
+        let config = JSON.parse(localStorage.getItem('appConfig')) || {};
+        let win = window.open('', '', 'height=800,width=600');
+        win.document.write(`<html><head><style>@page { size: A5; margin: 0; } body { font-family: Arial; padding: 20px; } .box { border: 2px solid #000; padding: 10mm; width: 128mm; height: 190mm; position: relative; box-sizing: border-box; } .h { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; } .row { display: flex; justify-content: space-between; border-bottom: 1px dotted #444; margin: 15px 0; padding-bottom: 5px; }</style></head><body><div class="box"><div class="h">${config.logo ? `<img src="${config.logo}" style="width:60px"><br>` : ''}<h2 style="margin:5px 0">${config.name}</h2><p>${config.addr}<br>মোবাইল: ${config.mob}</p><h3 style="border:1px solid #000; padding:5px 15px; display:inline-block;">মানি রিসিট</h3></div><div class="row"><span>রিসিট: #${id.toString().slice(-6)}</span> <span>তারিখ: ${item.date}</span></div><div class="row"><span>সেশন: ${item.session}</span></div><div class="row"><span>শিক্ষার্থী: ${item.student}</span></div><div class="row"><span>বিবরণ: ${item.details}</span></div><div style="background:#eee; padding:15px; margin-top:20px;"><strong>আদায়: ${item.paid} /-</strong><br><span style="color:red">বকেয়া: ${item.due} /-</span></div><div style="margin-top:50px; display:flex; justify-content:space-between;"><span>স্বাক্ষর: ________</span><span>কর্তৃপক্ষ: ________</span></div></div></body></html>`);
+        win.document.close();
+        setTimeout(() => { win.print(); win.close(); }, 500);
+    }
+</script>
+</body>
+</html>
