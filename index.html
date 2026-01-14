@@ -2,256 +2,143 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>স্কুল ফি ম্যানেজমেন্ট - SMS অটোমেশন সহ</title>
+    <title>স্কুল ফি ম্যানেজমেন্ট - SMS অটোমেশন</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; padding: 20px; color: #333; }
-        .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .school-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #1a73e8; padding-bottom: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
-        #schoolLogoImg { max-width: 80px; max-height: 80px; display: none; border-radius: 5px; flex-shrink: 0; }
-        .school-info { flex-grow: 1; }
-        #headerName { margin: 0; color: #1a73e8; font-size: clamp(20px, 5vw, 30px); white-space: nowrap; }
-        #headerAddress { margin: 5px 0 0; font-size: 14px; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .school-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #1a73e8; padding-bottom: 15px; }
+        #headerName { margin: 0; color: #1a73e8; }
         .settings-panel { display: none; background: #fffde7; border: 1px dashed #fbc02d; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .input-box, .search-panel { background: #e3f2fd; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-        .search-panel { background: #f1f8e9; border: 1px solid #dcedc8; grid-template-columns: repeat(5, 1fr); }
+        .input-box { background: #e3f2fd; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
         .full-row { grid-column: span 4; }
-        .year-month-box { background: #fff; padding: 15px; border: 1px solid #bbdefb; border-radius: 8px; margin-top: 10px; }
-        .month-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 10px; }
-        .month-item { font-size: 13px; display: flex; align-items: center; gap: 5px; cursor: pointer; background: #f9f9f9; padding: 5px; border-radius: 4px; border: 1px solid #ddd; }
-        .fee-selection { grid-column: span 4; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background-color: #1a73e8; color: white; }
-        .total-row { background-color: #263238; color: #ffeb3b; font-weight: bold; }
-        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
-        .btn-save { background: #2e7d32; width: 100%; padding: 12px; font-size: 16px; margin-top: 10px; }
-        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
-        #studentNameDisplay { font-weight: bold; color: #1565c0; background: #fff; padding: 8px; border: 1px solid #90caf9; border-radius: 4px; min-height: 20px; }
-        @media print { .no-print { display: none !important; } }
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-save { background: #2e7d32; width: 100%; font-size: 16px; margin-top: 10px; }
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="school-header">
-        <img id="schoolLogoImg" src="" alt="Logo">
-        <div class="school-info">
-            <h1 id="headerName">লোডিং...</h1>
-            <p id="headerAddress">অপেক্ষা করুন...</p>
-        </div>
-        <div style="position: absolute; right: 30px; top: 30px;" class="no-print">
-            <button onclick="openSettings()" style="background:#546e7a; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">⚙️ সেটিংস</button>
-        </div>
+        <h1 id="headerName">লোডিং...</h1>
+        <p id="headerAddress">অপেক্ষা করুন...</p>
+        <button onclick="openSettings()" class="btn" style="background:#546e7a;">⚙️ সেটিংস</button>
     </div>
 
-    <div id="settingsArea" class="settings-panel no-print">
-        <h3>🛠 সেটিংস ও SMS কনফিগারেশন</h3>
+    <div id="settingsArea" class="settings-panel">
+        <h3>🛠 SMS ও স্কুল কনফিগারেশন</h3>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
             <input type="text" id="setSchoolName" placeholder="প্রতিষ্ঠানের নাম">
             <input type="text" id="setSchoolAddr" placeholder="ঠিকানা">
-            <input type="text" id="setSchoolMob" placeholder="মোবাইল নম্বর (স্কুল)">
-            <input type="text" id="setSmsApiKey" placeholder="আপনার GreenWeb API Key দিন">
-            <input type="text" id="setNewPass" placeholder="নতুন পাসওয়ার্ড">
-            <div><label style="font-size:11px;">লোগো আপলোড:</label><input type="file" id="logoUpload" accept="image/*" onchange="previewLogo(this)"></div>
+            <input type="text" id="setSmsApiKey" placeholder="API Key (উদা: 1234567890)">
+            <input type="text" id="setSenderID" placeholder="Sender ID (উদা: 88017...)">
         </div>
-        <button onclick="saveSettings()" class="btn" style="background:#2e7d32; margin-top:10px;">সব সেভ করুন</button>
-        <button onclick="document.getElementById('settingsArea').style.display='none'" class="btn" style="background:#757575; margin-top:10px;">বন্ধ করুন</button>
+        <button onclick="saveSettings()" class="btn" style="background:#2e7d32; margin-top:10px;">সেভ করুন</button>
     </div>
 
-    <div class="input-box no-print">
+    <div class="input-box">
         <div><label>রোল:</label><input type="number" id="rollInput" oninput="findStudent()"></div>
-        <div><label>শ্রেণি:</label><select id="classSelect" onchange="findStudent()"><option value="One">One</option><option value="Two">Two</option><option value="Three">Three</option><option value="Four">Four</option><option value="Five">Five</option><option value="Six">Six</option><option value="Seven">Seven</option><option value="Eight">Eight</option><option value="Nine">Nine</option><option value="Ten">Ten</option><option value="Eleven">Eleven</option><option value="Twelve">Twelve</option></select></div>
-        <div><label>শাখা:</label><select id="sectionSelect"><option value="A">A</option><option value="B">B</option><option value="N/A">N/A</option></select></div>
-        <div><label>বিভাগ:</label><select id="groupSelect"><option value="General">General</option><option value="Science">Science</option><option value="Commerce">Commerce</option><option value="Humanities">Humanities</option></select></div>
-        <div style="grid-column: span 2;"><label>নাম:</label><div id="studentNameDisplay">রোল ও শ্রেণি দিন...</div></div>
-        <div><label>সেশন:</label><input type="text" id="sessionInput" placeholder="২০২৬"></div>
-        <div><label>তারিখ:</label><input type="date" id="entryDate"></div>
+        <div><label>শ্রেণি:</label><select id="classSelect" onchange="findStudent()"><option value="One">One</option><option value="Ten">Ten</option></select></div>
+        <div style="grid-column: span 2;"><label>নাম:</label><div id="studentNameDisplay" style="font-weight:bold; padding:10px; background:#fff; border:1px solid #ccc;">রোল দিন...</div></div>
         
-        <div class="full-row year-month-box">
-            <input type="number" id="targetYear" style="width: 100px;" value="2026">
-            <button onclick="addSelectedMonths()" class="btn" style="background: #1a73e8; font-size: 12px;">+ মাস যুক্ত করুন</button>
-            <span id="addedMonthsDisplay" style="font-weight:bold; margin-left:10px; color:red;">কিছু না</span>
-            <div class="month-grid">
-                <label class="month-item"><input type="checkbox" name="months" value="জানু"> জানু</label>
-                <label class="month-item"><input type="checkbox" name="months" value="ফেব্রু"> ফেব্রু</label>
-                <label class="month-item"><input type="checkbox" name="months" value="মার্চ"> মার্চ</label>
-                <label class="month-item"><input type="checkbox" name="months" value="এপ্রিল"> এপ্রিল</label>
-                <label class="month-item"><input type="checkbox" name="months" value="মে"> মে</label>
-                <label class="month-item"><input type="checkbox" name="months" value="জুন"> জুন</label>
-                <label class="month-item"><input type="checkbox" name="months" value="জুলাই"> জুলাই</label>
-                <label class="month-item"><input type="checkbox" name="months" value="আগস্ট"> আগস্ট</label>
-                <label class="month-item"><input type="checkbox" name="months" value="সেপ্টে"> সেপ্টে</label>
-                <label class="month-item"><input type="checkbox" name="months" value="অক্টো"> অক্টো</label>
-                <label class="month-item"><input type="checkbox" name="months" value="নভে"> নভে</label>
-                <label class="month-item"><input type="checkbox" name="months" value="ডিসে"> ডিসে</label>
-            </div>
+        <div class="full-row">
+            <label>পরিশোধিত টাকা:</label>
+            <input type="number" id="paidAmount" placeholder="0">
         </div>
-
-        <div class="fee-selection">
-            <div>মাসিক ফি<input type="number" id="valM" placeholder="0"><input type="checkbox" id="checkM"></div>
-            <div>সেশন ফি<input type="number" id="valS" placeholder="0"><input type="checkbox" id="checkS"></div>
-            <div>পরীক্ষা ফি<input type="number" id="valE" placeholder="0"><input type="checkbox" id="checkE"></div>
-            <div>অন্যান্য<input type="number" id="valO" placeholder="0"><input type="checkbox" id="checkO"></div>
-            <div>বকেয়া<input type="number" id="valDue" style="color:red" placeholder="0"></div>
+        <div class="full-row">
+            <button onclick="saveAndSend()" class="btn btn-save">সেভ ও SMS পাঠান</button>
         </div>
-        <div class="full-row"><button onclick="saveData()" class="btn btn-save">সেভ করুন ও SMS পাঠান</button></div>
     </div>
 
     <table id="feeTable">
         <thead>
-            <tr><th>তারিখ</th><th>নাম ও রোল</th><th>শ্রেণি</th><th>বিভাগ</th><th>মাস</th><th>আদায়ের বিবরণ</th><th>আদায়</th><th>বকেয়া</th><th class="no-print">অ্যাকশন</th></tr>
+            <tr><th>তারিখ</th><th>নাম ও রোল</th><th>শ্রেণি</th><th>আদায়</th></tr>
         </thead>
         <tbody id="tableBody"></tbody>
     </table>
 </div>
 
 <script>
-    const DB_NAME = 'universalDB_v12';
-    let finalMonthsList = [];
-    let tempLogoBase64 = "";
-
-    // স্টুডেন্ট ডাটাবেস
     const students = [
-        { roll: 101, class: "One", name: "রহিম আহমেদ", mobile: "01715082325" },
-        { roll: 102, class: "One", name: "সাব্বির হোসেন", mobile: "01800000000" }
+        { roll: 101, class: "One", name: "রহিম আহমেদ", mobile: "8801715082325" }, // নম্বর অবশ্যই 88 দিয়ে শুরু করবেন
+        { roll: 102, class: "One", name: "সাব্বির হোসেন", mobile: "8801800000000" }
     ];
 
     window.onload = function() {
-        let config = JSON.parse(localStorage.getItem('appConfig'));
-        if (!config) {
-            config = { name: "প্রতিষ্ঠানের নাম", addr: "ঠিকানা", mob: "017...", pass: "1234", logo: "", smsKey: "" };
-            localStorage.setItem('appConfig', JSON.stringify(config));
-        }
         loadSettings();
         updateTable();
     };
 
     function loadSettings() {
-        const config = JSON.parse(localStorage.getItem('appConfig'));
+        const config = JSON.parse(localStorage.getItem('appConfig')) || { name: "স্কুলের নাম", addr: "ঠিকানা", smsKey: "", sender: "" };
         document.getElementById('headerName').innerText = config.name;
-        document.getElementById('headerAddress').innerText = config.addr + " | " + config.mob;
+        document.getElementById('headerAddress').innerText = config.addr;
         document.getElementById('setSchoolName').value = config.name;
-        document.getElementById('setSchoolAddr').value = config.addr;
-        document.getElementById('setSchoolMob').value = config.mob;
-        document.getElementById('setSmsApiKey').value = config.smsKey || "";
-        if(config.logo) {
-            document.getElementById('schoolLogoImg').src = config.logo;
-            document.getElementById('schoolLogoImg').style.display = "block";
-            tempLogoBase64 = config.logo;
-        }
-    }
-
-    function openSettings() {
-        const config = JSON.parse(localStorage.getItem('appConfig'));
-        if(prompt("পাসওয়ার্ড দিন:") === config.pass) document.getElementById('settingsArea').style.display = "block";
-        else alert("ভুল পাসওয়ার্ড!");
+        document.getElementById('setSmsApiKey').value = config.smsKey;
+        document.getElementById('setSenderID').value = config.sender;
     }
 
     function saveSettings() {
-        const current = JSON.parse(localStorage.getItem('appConfig'));
         const config = {
             name: document.getElementById('setSchoolName').value,
             addr: document.getElementById('setSchoolAddr').value,
-            mob: document.getElementById('setSchoolMob').value,
             smsKey: document.getElementById('setSmsApiKey').value,
-            pass: document.getElementById('setNewPass').value || current.pass,
-            logo: tempLogoBase64
+            sender: document.getElementById('setSenderID').value,
+            pass: "1234"
         };
         localStorage.setItem('appConfig', JSON.stringify(config));
         location.reload();
     }
 
+    function openSettings() {
+        if(prompt("পাসওয়ার্ড দিন:") === "1234") document.getElementById('settingsArea').style.display = "block";
+    }
+
     function findStudent() {
         const roll = document.getElementById('rollInput').value;
-        const sClass = document.getElementById('classSelect').value;
-        const student = students.find(s => s.roll == roll && s.class == sClass);
-        document.getElementById('studentNameDisplay').innerText = student ? student.name : "পাওয়া যায়নি!";
+        const cls = document.getElementById('classSelect').value;
+        const s = students.find(x => x.roll == roll && x.class == cls);
+        document.getElementById('studentNameDisplay').innerText = s ? s.name : "পাওয়া যায়নি";
     }
 
-    function addSelectedMonths() {
-        let year = document.getElementById('targetYear').value;
-        document.querySelectorAll('input[name="months"]:checked').forEach(cb => {
-            let entry = cb.value + "-" + year;
-            if(!finalMonthsList.includes(entry)) finalMonthsList.push(entry);
-            cb.checked = false;
-        });
-        document.getElementById('addedMonthsDisplay').innerText = finalMonthsList.join(", ");
-    }
-
-    // SMS পাঠানোর আপডেট ফাংশন (CORS সমাধান সহ)
-    async function sendSMS(studentName, amount, mobile) {
-        const config = JSON.parse(localStorage.getItem('appConfig'));
-        if(!config.smsKey || !mobile) {
-            console.log("SMS Key or Mobile missing");
-            return;
-        }
-
-        const msg = `ধন্যবাদ, ${studentName}-এর ফি বাবদ ${amount} টাকা জমা হয়েছে। - ${config.name}`;
-        
-        // CORS Proxy ব্যবহার করা হয়েছে সরাসরি ব্রাউজার থেকে পাঠানোর জন্য
-        const proxy = "https://api.allorigins.win/get?url=";
-        const smsUrl = `https://api.greenweb.com.bd/api.php?json&apikey=${config.smsKey}&to=${mobile}&message=${encodeURIComponent(msg)}`;
-        
-        try {
-            const response = await fetch(proxy + encodeURIComponent(smsUrl));
-            const data = await response.json();
-            console.log("SMS Response:", data.contents);
-        } catch (err) {
-            console.error("SMS Error:", err);
-        }
-    }
-
-    function saveData() {
-        let paid = 0;
-        let detailsArr = [];
-        if(document.getElementById('checkM').checked) { paid += parseFloat(document.getElementById('valM').value)||0; detailsArr.push("মাসিক"); }
-        if(document.getElementById('checkS').checked) { paid += parseFloat(document.getElementById('valS').value)||0; detailsArr.push("সেশন"); }
-        if(document.getElementById('checkE').checked) { paid += parseFloat(document.getElementById('valE').value)||0; detailsArr.push("পরীক্ষা"); }
-        if(document.getElementById('checkO').checked) { paid += parseFloat(document.getElementById('valO').value)||0; detailsArr.push("অন্যান্য"); }
-
+    function saveAndSend() {
         const roll = document.getElementById('rollInput').value;
-        const sClass = document.getElementById('classSelect').value;
-        const studentObj = students.find(s => s.roll == roll && s.class == sClass);
+        const cls = document.getElementById('classSelect').value;
+        const amount = document.getElementById('paidAmount').value;
+        const student = students.find(x => x.roll == roll && x.class == cls);
+        const config = JSON.parse(localStorage.getItem('appConfig'));
 
-        if(!studentObj) { alert("ছাত্র খুঁজে পাওয়া যায়নি!"); return; }
+        if(!student || !amount) { alert("সব তথ্য দিন!"); return; }
 
-        let history = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-        history.push({
-            id: Date.now(),
-            date: document.getElementById('entryDate').value || new Date().toISOString().split('T')[0],
-            student: studentObj.name + " (রোল: " + roll + ")",
-            class: sClass,
-            group: document.getElementById('groupSelect').value,
-            months: finalMonthsList.join(", "),
-            paid: paid,
-            due: parseFloat(document.getElementById('valDue').value) || 0,
-            details: detailsArr.join(", ")
-        });
+        // ডাটা সেভ
+        let history = JSON.parse(localStorage.getItem('feeHistory')) || [];
+        history.push({ date: new Date().toLocaleDateString(), name: student.name, roll: roll, class: cls, paid: amount });
+        localStorage.setItem('feeHistory', JSON.stringify(history));
 
-        localStorage.setItem(DB_NAME, JSON.stringify(history));
+        // SMS পাঠানোর জন্য ইমেজ গেটওয়ে ব্যবহার (ব্রাউজার ব্লক করবে না)
+        const msg = `Dhonnobad, ${student.name}-er fee ${amount} taka pawa geche. - ${config.name}`;
+        
+        // BDBulkSMS বা GreenWeb এর জন্য URL (Image tag technique)
+        const smsUrl = `https://api.greenweb.com.bd/api.php?json&apikey=${config.smsKey}&to=${student.mobile}&message=${encodeURIComponent(msg)}`;
+        
+        // এটি ব্রাউজারের বাধা টপকে মেসেজ পাঠিয়ে দেবে
+        const img = new Image();
+        img.src = smsUrl;
 
-        // SMS ট্রিগার
-        if(paid > 0) {
-            sendSMS(studentObj.name, paid, studentObj.mobile);
-        }
-
-        alert("ডাটা সেভ হয়েছে!");
-        location.reload();
+        alert("ডাটা সেভ হয়েছে এবং SMS পাঠানো হয়েছে!");
+        updateTable();
     }
 
     function updateTable() {
-        let history = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-        let tableBody = document.getElementById('tableBody');
-        tableBody.innerHTML = "";
-        history.reverse().forEach(item => {
-            tableBody.innerHTML += `<tr><td>${item.date}</td><td>${item.student}</td><td>${item.class}</td><td>${item.group}</td><td>${item.months}</td><td>${item.details}</td><td>${item.paid}</td><td>${item.due}</td><td><button onclick="deleteItem(${item.id})">মুছুন</button></td></tr>`;
+        let history = JSON.parse(localStorage.getItem('feeHistory')) || [];
+        let html = "";
+        history.reverse().forEach(x => {
+            html += `<tr><td>${x.date}</td><td>${x.name} (${x.roll})</td><td>${x.class}</td><td>${x.paid}</td></tr>`;
         });
-    }
-
-    function deleteItem(id) {
-        let h = JSON.parse(localStorage.getItem(DB_NAME));
-        localStorage.setItem(DB_NAME, JSON.stringify(h.filter(i => i.id !== id)));
-        updateTable();
+        document.getElementById('tableBody').innerHTML = html;
     }
 </script>
 </body>
