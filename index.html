@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>স্কুল ফি ম্যানেজমেন্ট - বিভাগ কলাম আপডেট সহ</title>
+    <title>স্কুল ফি ম্যানেজমেন্ট - SMS অটোমেশন সহ</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; padding: 20px; color: #333; }
         .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
@@ -62,11 +62,12 @@
     </div>
 
     <div id="settingsArea" class="settings-panel no-print">
-        <h3>🛠 সেটিংস ও ডাটা ব্যাকআপ</h3>
+        <h3>🛠 সেটিংস ও SMS কনফিগারেশন</h3>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
             <input type="text" id="setSchoolName" placeholder="প্রতিষ্ঠানের নাম">
             <input type="text" id="setSchoolAddr" placeholder="ঠিকানা">
-            <input type="text" id="setSchoolMob" placeholder="মোবাইল নম্বর">
+            <input type="text" id="setSchoolMob" placeholder="মোবাইল নম্বর (স্কুল)">
+            <input type="text" id="setSmsApiKey" placeholder="https://api.bdbulksms.net/api.php">
             <input type="text" id="setNewPass" placeholder="নতুন পাসওয়ার্ড">
             <div><label style="font-size:11px;">লোগো আপলোড:</label><input type="file" id="logoUpload" accept="image/*" onchange="previewLogo(this)"></div>
         </div>
@@ -84,7 +85,7 @@
         <div><label>শাখা:</label><select id="sectionSelect"><option value="A">A</option><option value="B">B</option><option value="N/A">N/A</option></select></div>
         <div><label>বিভাগ:</label><select id="groupSelect"><option value="General">General</option><option value="Science">Science</option><option value="Commerce">Commerce</option><option value="Humanities">Humanities</option></select></div>
         <div style="grid-column: span 2;"><label>নাম:</label><div id="studentNameDisplay">রোল ও শ্রেণি দিন...</div></div>
-        <div><label>সেশন:</label><input type="text" id="sessionInput" placeholder="২০২৪-২৫"></div>
+        <div><label>সেশন:</label><input type="text" id="sessionInput" placeholder="২০২৬"></div>
         <div><label>তারিখ:</label><input type="date" id="entryDate"></div>
         
         <div class="full-row year-month-box">
@@ -114,14 +115,14 @@
             <div>অন্যান্য<input type="number" id="valO" placeholder="0"><input type="checkbox" id="checkO"></div>
             <div>বকেয়া<input type="number" id="valDue" style="color:red" placeholder="0"></div>
         </div>
-        <div class="full-row"><button onclick="saveData()" class="btn btn-save">সেভ করুন</button></div>
+        <div class="full-row"><button onclick="saveData()" class="btn btn-save">সেভ করুন ও SMS পাঠান</button></div>
     </div>
 
     <div class="search-panel no-print">
         <div style="grid-column: span 2;"><label>🔍 অনুসন্ধান:</label><input type="text" id="searchIndi" placeholder="নাম/রোল..." onkeyup="updateTable()"></div>
         <div><label>শ্রেণি:</label><select id="searchCls" onchange="updateTable()"><option value="">সব শ্রেণি</option><option value="One">One</option><option value="Two">Two</option><option value="Three">Three</option><option value="Four">Four</option><option value="Five">Five</option><option value="Six">Six</option><option value="Seven">Seven</option><option value="Eight">Eight</option><option value="Nine">Nine</option><option value="Ten">Ten</option><option value="Eleven">Eleven</option><option value="Twelve">Twelve</option></select></div>
         <div><label>বিভাগ:</label><select id="searchGroup" onchange="updateTable()"><option value="">সব বিভাগ</option><option value="General">General</option><option value="Science">Science</option><option value="Commerce">Commerce</option><option value="Humanities">Humanities</option></select></div>
-        <div><label>সেশন:</label><input type="text" id="searchSes" placeholder="২০২৪-২৫" onkeyup="updateTable()"></div>
+        <div><label>সেশন:</label><input type="text" id="searchSes" placeholder="২০২৬" onkeyup="updateTable()"></div>
         <div><label>শুরুর তারিখ:</label><input type="date" id="searchSDate" onchange="updateTable()"></div>
         <div><label>শেষ তারিখ:</label><input type="date" id="searchEDate" onchange="updateTable()"></div>
         <div style="grid-column: span 3; display: flex; align-items: flex-end;">
@@ -159,16 +160,17 @@
     let finalMonthsList = [];
     let tempLogoBase64 = "";
 
+    // স্টুডেন্ট ডাটাবেস (মোবাইল নম্বর সহ)
     const students = [
-        { roll: 101, class: "One", name: "রহিম আহমেদ" },
-        { roll: 102, class: "One", name: "সাব্বির হোসেন" },
-        { roll: 101, class: "Ten", name: "করিম উল্লাহ" }
+        { roll: 101, class: "One", name: "রহিম আহমেদ", mobile: "01715082325" },
+        { roll: 102, class: "One", name: "সাব্বির হোসেন", mobile: "01800000000" },
+        { roll: 101, class: "Ten", name: "করিম উল্লাহ", mobile: "01900000000" }
     ];
 
     window.onload = function() {
         let config = JSON.parse(localStorage.getItem('appConfig'));
         if (!config) {
-            config = { name: "প্রতিষ্ঠানের নাম", addr: "ঠিকানা", mob: "মোবাইল", pass: "1234", logo: "" };
+            config = { name: "প্রতিষ্ঠানের নাম", addr: "ঠিকানা", mob: "017...", pass: "1234", logo: "", smsKey: "" };
             localStorage.setItem('appConfig', JSON.stringify(config));
         }
         loadSettings();
@@ -179,6 +181,11 @@
         const config = JSON.parse(localStorage.getItem('appConfig'));
         document.getElementById('headerName').innerText = config.name;
         document.getElementById('headerAddress').innerText = config.addr + " | " + config.mob;
+        document.getElementById('setSchoolName').value = config.name;
+        document.getElementById('setSchoolAddr').value = config.addr;
+        document.getElementById('setSchoolMob').value = config.mob;
+        document.getElementById('setSmsApiKey').value = config.smsKey || "";
+        
         if(config.logo) {
             document.getElementById('schoolLogoImg').src = config.logo;
             document.getElementById('schoolLogoImg').style.display = "block";
@@ -206,6 +213,7 @@
             name: document.getElementById('setSchoolName').value,
             addr: document.getElementById('setSchoolAddr').value,
             mob: document.getElementById('setSchoolMob').value,
+            smsKey: document.getElementById('setSmsApiKey').value,
             pass: document.getElementById('setNewPass').value || current.pass,
             logo: tempLogoBase64
         };
@@ -230,6 +238,23 @@
         document.getElementById('addedMonthsDisplay').innerText = finalMonthsList.join(", ");
     }
 
+    // SMS পাঠানোর ফাংশন (GreenWeb API)
+    async function sendSMS(studentName, amount, mobile) {
+        const config = JSON.parse(localStorage.getItem('appConfig'));
+        if(!config.smsKey || !mobile) return;
+
+        const message = `ধন্যবাদ, ${studentName}-এর ফি বাবদ ${amount} টাকা জমা পাওয়া গেছে। - ${config.name}`;
+        const url = `https://api.greenweb.com.bd/api.php?json&apikey=${config.smsKey}&to=${mobile}&message=${encodeURIComponent(message)}`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            console.log("SMS Status:", data);
+        } catch (err) {
+            console.error("SMS Failed:", err);
+        }
+    }
+
     function saveData() {
         let paid = 0;
         let detailsArr = [];
@@ -251,8 +276,14 @@
             paid += val; detailsArr.push("অন্যান্য:" + val);
         }
 
+        if(paid === 0 && !confirm("০ টাকা সেভ করবেন?")) return;
+
+        const roll = document.getElementById('rollInput').value;
+        const sClass = document.getElementById('classSelect').value;
+        const studentObj = students.find(s => s.roll == roll && s.class == sClass);
+
         let history = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-        history.push({
+        let newEntry = {
             id: Date.now(),
             date: document.getElementById('entryDate').value || new Date().toISOString().split('T')[0],
             session: document.getElementById('sessionInput').value,
@@ -264,8 +295,17 @@
             paid, 
             due: parseFloat(document.getElementById('valDue').value) || 0,
             details: detailsArr.length > 0 ? detailsArr.join(", ") : "নগদ গ্রহণ"
-        });
+        };
+
+        history.push(newEntry);
         localStorage.setItem(DB_NAME, JSON.stringify(history));
+
+        // SMS ট্রিগার
+        if(studentObj && studentObj.mobile && paid > 0) {
+            sendSMS(studentObj.name, paid, studentObj.mobile);
+        }
+
+        alert("ডাটা সফলভাবে সংরক্ষিত হয়েছে!");
         location.reload();
     }
 
