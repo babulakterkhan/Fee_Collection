@@ -6,44 +6,27 @@
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; padding: 20px; color: #333; }
         .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        
-        .school-header { 
-            text-align: center; 
-            margin-bottom: 25px; 
-            border-bottom: 2px solid #1a73e8; 
-            padding-bottom: 15px; 
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            justify-content: center;
-            gap: 10px; 
-        }
+        .school-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #1a73e8; padding-bottom: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
         #schoolLogoImg { max-width: 80px; max-height: 80px; display: none; border-radius: 5px; flex-shrink: 0; }
         .school-info { flex-grow: 1; }
         #headerName { margin: 0; color: #1a73e8; font-size: clamp(20px, 5vw, 30px); white-space: nowrap; }
         #headerAddress { margin: 5px 0 0; font-size: 14px; }
-
         .settings-panel { display: none; background: #fffde7; border: 1px dashed #fbc02d; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
         .input-box, .search-panel { background: #e3f2fd; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
         .search-panel { background: #f1f8e9; border: 1px solid #dcedc8; grid-template-columns: repeat(5, 1fr); }
         .full-row { grid-column: span 4; }
-        
         .year-month-box { background: #fff; padding: 15px; border: 1px solid #bbdefb; border-radius: 8px; margin-top: 10px; }
         .month-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 10px; }
         .month-item { font-size: 13px; display: flex; align-items: center; gap: 5px; cursor: pointer; background: #f9f9f9; padding: 5px; border-radius: 4px; border: 1px solid #ddd; }
-        
         .fee-selection { grid-column: span 4; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; font-size: 13px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background-color: #1a73e8; color: white; }
         .total-row { background-color: #263238; color: #ffeb3b; font-weight: bold; }
-
         .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
         .btn-save { background: #2e7d32; width: 100%; padding: 12px; font-size: 16px; margin-top: 10px; }
         input, select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
         #studentNameDisplay { font-weight: bold; color: #1565c0; background: #fff; padding: 8px; border: 1px solid #90caf9; border-radius: 4px; min-height: 20px; }
-
         @media print { .no-print { display: none !important; } }
     </style>
 </head>
@@ -67,13 +50,9 @@
             <input type="text" id="setSchoolName" placeholder="প্রতিষ্ঠানের নাম">
             <input type="text" id="setSchoolAddr" placeholder="ঠিকানা">
             <input type="text" id="setSchoolMob" placeholder="মোবাইল নম্বর (স্কুল)">
-            <input type="text" id="setSmsApiKey" placeholder="https://api.bdbulksms.net/api.php">
+            <input type="text" id="setSmsApiKey" placeholder="আপনার GreenWeb API Key দিন">
             <input type="text" id="setNewPass" placeholder="নতুন পাসওয়ার্ড">
             <div><label style="font-size:11px;">লোগো আপলোড:</label><input type="file" id="logoUpload" accept="image/*" onchange="previewLogo(this)"></div>
-        </div>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button onclick="exportData()" class="btn" style="background:#1565c0;">💾 ব্যাকআপ নিন</button>
-            <input type="file" id="importFile" accept=".json" onchange="importData(this)" style="width: auto;">
         </div>
         <button onclick="saveSettings()" class="btn" style="background:#2e7d32; margin-top:10px;">সব সেভ করুন</button>
         <button onclick="document.getElementById('settingsArea').style.display='none'" class="btn" style="background:#757575; margin-top:10px;">বন্ধ করুন</button>
@@ -118,40 +97,11 @@
         <div class="full-row"><button onclick="saveData()" class="btn btn-save">সেভ করুন ও SMS পাঠান</button></div>
     </div>
 
-    <div class="search-panel no-print">
-        <div style="grid-column: span 2;"><label>🔍 অনুসন্ধান:</label><input type="text" id="searchIndi" placeholder="নাম/রোল..." onkeyup="updateTable()"></div>
-        <div><label>শ্রেণি:</label><select id="searchCls" onchange="updateTable()"><option value="">সব শ্রেণি</option><option value="One">One</option><option value="Two">Two</option><option value="Three">Three</option><option value="Four">Four</option><option value="Five">Five</option><option value="Six">Six</option><option value="Seven">Seven</option><option value="Eight">Eight</option><option value="Nine">Nine</option><option value="Ten">Ten</option><option value="Eleven">Eleven</option><option value="Twelve">Twelve</option></select></div>
-        <div><label>বিভাগ:</label><select id="searchGroup" onchange="updateTable()"><option value="">সব বিভাগ</option><option value="General">General</option><option value="Science">Science</option><option value="Commerce">Commerce</option><option value="Humanities">Humanities</option></select></div>
-        <div><label>সেশন:</label><input type="text" id="searchSes" placeholder="২০২৬" onkeyup="updateTable()"></div>
-        <div><label>শুরুর তারিখ:</label><input type="date" id="searchSDate" onchange="updateTable()"></div>
-        <div><label>শেষ তারিখ:</label><input type="date" id="searchEDate" onchange="updateTable()"></div>
-        <div style="grid-column: span 3; display: flex; align-items: flex-end;">
-            <button onclick="printFullReport()" class="btn" style="background:#5c6bc0; width: 100%; height: 40px; font-size: 15px;">📊 রিপোর্ট প্রিন্ট করুন (কালার)</button>
-        </div>
-    </div>
-
     <table id="feeTable">
         <thead>
-            <tr>
-                <th>তারিখ</th>
-                <th>নাম ও রোল</th>
-                <th>শ্রেণি</th>
-                <th>বিভাগ</th> <th>মাস</th>
-                <th>আদায়ের বিবরণ</th>
-                <th>আদায়</th>
-                <th>বকেয়া</th>
-                <th class="no-print">অ্যাকশন</th>
-            </tr>
+            <tr><th>তারিখ</th><th>নাম ও রোল</th><th>শ্রেণি</th><th>বিভাগ</th><th>মাস</th><th>আদায়ের বিবরণ</th><th>আদায়</th><th>বকেয়া</th><th class="no-print">অ্যাকশন</th></tr>
         </thead>
         <tbody id="tableBody"></tbody>
-        <tfoot>
-            <tr class="total-row">
-                <td colspan="6">সর্বমোট:</td>
-                <td id="grandTotal">0</td>
-                <td id="grandDue">0</td>
-                <td class="no-print"></td>
-            </tr>
-        </tfoot>
     </table>
 </div>
 
@@ -160,11 +110,10 @@
     let finalMonthsList = [];
     let tempLogoBase64 = "";
 
-    // স্টুডেন্ট ডাটাবেস (মোবাইল নম্বর সহ)
+    // স্টুডেন্ট ডাটাবেস
     const students = [
         { roll: 101, class: "One", name: "রহিম আহমেদ", mobile: "01715082325" },
-        { roll: 102, class: "One", name: "সাব্বির হোসেন", mobile: "01800000000" },
-        { roll: 101, class: "Ten", name: "করিম উল্লাহ", mobile: "01900000000" }
+        { roll: 102, class: "One", name: "সাব্বির হোসেন", mobile: "01800000000" }
     ];
 
     window.onload = function() {
@@ -185,19 +134,10 @@
         document.getElementById('setSchoolAddr').value = config.addr;
         document.getElementById('setSchoolMob').value = config.mob;
         document.getElementById('setSmsApiKey').value = config.smsKey || "";
-        
         if(config.logo) {
             document.getElementById('schoolLogoImg').src = config.logo;
             document.getElementById('schoolLogoImg').style.display = "block";
             tempLogoBase64 = config.logo;
-        }
-    }
-
-    function previewLogo(input) {
-        if (input.files && input.files[0]) {
-            let reader = new FileReader();
-            reader.onload = (e) => { tempLogoBase64 = e.target.result; };
-            reader.readAsDataURL(input.files[0]);
         }
     }
 
@@ -225,7 +165,7 @@
         const roll = document.getElementById('rollInput').value;
         const sClass = document.getElementById('classSelect').value;
         const student = students.find(s => s.roll == roll && s.class == sClass);
-        document.getElementById('studentNameDisplay').innerText = student ? student.name + " (রোল: " + student.roll + ")" : "পাওয়া যায়নি!";
+        document.getElementById('studentNameDisplay').innerText = student ? student.name : "পাওয়া যায়নি!";
     }
 
     function addSelectedMonths() {
@@ -238,228 +178,80 @@
         document.getElementById('addedMonthsDisplay').innerText = finalMonthsList.join(", ");
     }
 
-    // SMS পাঠানোর ফাংশন (GreenWeb API)
+    // SMS পাঠানোর আপডেট ফাংশন (CORS সমাধান সহ)
     async function sendSMS(studentName, amount, mobile) {
         const config = JSON.parse(localStorage.getItem('appConfig'));
-        if(!config.smsKey || !mobile) return;
+        if(!config.smsKey || !mobile) {
+            console.log("SMS Key or Mobile missing");
+            return;
+        }
 
-        const message = `ধন্যবাদ, ${studentName}-এর ফি বাবদ ${amount} টাকা জমা পাওয়া গেছে। - ${config.name}`;
-        const url = `https://api.greenweb.com.bd/api.php?json&apikey=${config.smsKey}&to=${mobile}&message=${encodeURIComponent(message)}`;
-
+        const msg = `ধন্যবাদ, ${studentName}-এর ফি বাবদ ${amount} টাকা জমা হয়েছে। - ${config.name}`;
+        
+        // CORS Proxy ব্যবহার করা হয়েছে সরাসরি ব্রাউজার থেকে পাঠানোর জন্য
+        const proxy = "https://api.allorigins.win/get?url=";
+        const smsUrl = `https://api.greenweb.com.bd/api.php?json&apikey=${config.smsKey}&to=${mobile}&message=${encodeURIComponent(msg)}`;
+        
         try {
-            const response = await fetch(url);
+            const response = await fetch(proxy + encodeURIComponent(smsUrl));
             const data = await response.json();
-            console.log("SMS Status:", data);
+            console.log("SMS Response:", data.contents);
         } catch (err) {
-            console.error("SMS Failed:", err);
+            console.error("SMS Error:", err);
         }
     }
 
     function saveData() {
         let paid = 0;
         let detailsArr = [];
-        
-        if(document.getElementById('checkM').checked) {
-            let val = parseFloat(document.getElementById('valM').value)||0;
-            paid += val; detailsArr.push("মাসিক:" + val);
-        }
-        if(document.getElementById('checkS').checked) {
-            let val = parseFloat(document.getElementById('valS').value)||0;
-            paid += val; detailsArr.push("সেশন:" + val);
-        }
-        if(document.getElementById('checkE').checked) {
-            let val = parseFloat(document.getElementById('valE').value)||0;
-            paid += val; detailsArr.push("পরীক্ষা:" + val);
-        }
-        if(document.getElementById('checkO').checked) {
-            let val = parseFloat(document.getElementById('valO').value)||0;
-            paid += val; detailsArr.push("অন্যান্য:" + val);
-        }
-
-        if(paid === 0 && !confirm("০ টাকা সেভ করবেন?")) return;
+        if(document.getElementById('checkM').checked) { paid += parseFloat(document.getElementById('valM').value)||0; detailsArr.push("মাসিক"); }
+        if(document.getElementById('checkS').checked) { paid += parseFloat(document.getElementById('valS').value)||0; detailsArr.push("সেশন"); }
+        if(document.getElementById('checkE').checked) { paid += parseFloat(document.getElementById('valE').value)||0; detailsArr.push("পরীক্ষা"); }
+        if(document.getElementById('checkO').checked) { paid += parseFloat(document.getElementById('valO').value)||0; detailsArr.push("অন্যান্য"); }
 
         const roll = document.getElementById('rollInput').value;
         const sClass = document.getElementById('classSelect').value;
         const studentObj = students.find(s => s.roll == roll && s.class == sClass);
 
+        if(!studentObj) { alert("ছাত্র খুঁজে পাওয়া যায়নি!"); return; }
+
         let history = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-        let newEntry = {
+        history.push({
             id: Date.now(),
             date: document.getElementById('entryDate').value || new Date().toISOString().split('T')[0],
-            session: document.getElementById('sessionInput').value,
-            student: document.getElementById('studentNameDisplay').innerText,
-            class: document.getElementById('classSelect').value,
-            section: document.getElementById('sectionSelect').value,
+            student: studentObj.name + " (রোল: " + roll + ")",
+            class: sClass,
             group: document.getElementById('groupSelect').value,
             months: finalMonthsList.join(", "),
-            paid, 
+            paid: paid,
             due: parseFloat(document.getElementById('valDue').value) || 0,
-            details: detailsArr.length > 0 ? detailsArr.join(", ") : "নগদ গ্রহণ"
-        };
+            details: detailsArr.join(", ")
+        });
 
-        history.push(newEntry);
         localStorage.setItem(DB_NAME, JSON.stringify(history));
 
         // SMS ট্রিগার
-        if(studentObj && studentObj.mobile && paid > 0) {
+        if(paid > 0) {
             sendSMS(studentObj.name, paid, studentObj.mobile);
         }
 
-        alert("ডাটা সফলভাবে সংরক্ষিত হয়েছে!");
+        alert("ডাটা সেভ হয়েছে!");
         location.reload();
     }
 
     function updateTable() {
         let history = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-        let kIndi = document.getElementById('searchIndi').value.toUpperCase();
-        let kCls = document.getElementById('searchCls').value;
-        let kGrp = document.getElementById('searchGroup').value;
-        let kSes = document.getElementById('searchSes').value;
-        let sDate = document.getElementById('searchSDate').value, eDate = document.getElementById('searchEDate').value;
-
         let tableBody = document.getElementById('tableBody');
-        let tPaid = 0, tDue = 0; tableBody.innerHTML = "";
-
-        history.slice().reverse().forEach(item => {
-            const matchesSearch = item.student.toUpperCase().includes(kIndi);
-            const matchesClass = !kCls || item.class === kCls;
-            const matchesGroup = !kGrp || item.group === kGrp;
-            const matchesSession = !kSes || (item.session && item.session.includes(kSes));
-            const matchesDate = (!sDate || !eDate) || (item.date >= sDate && item.date <= eDate);
-
-            if(matchesSearch && matchesClass && matchesGroup && matchesSession && matchesDate) {
-                tPaid += item.paid; tDue += item.due;
-                tableBody.innerHTML += `<tr>
-                    <td>${item.date}</td>
-                    <td>${item.student}</td>
-                    <td>${item.class}</td>
-                    <td>${item.group}</td> <td>${item.months}</td>
-                    <td>${item.details}</td>
-                    <td>${item.paid}</td>
-                    <td>${item.due}</td>
-                    <td class="no-print">
-                        <button onclick="printReceipt(${item.id})" style="background:#0288d1; color:white; border:none; padding:3px 8px; cursor:pointer;">রিসিট</button> 
-                        <button onclick="deleteItem(${item.id})" style="background:red; color:white; border:none; padding:3px 8px; cursor:pointer;">X</button>
-                    </td>
-                </tr>`;
-            }
+        tableBody.innerHTML = "";
+        history.reverse().forEach(item => {
+            tableBody.innerHTML += `<tr><td>${item.date}</td><td>${item.student}</td><td>${item.class}</td><td>${item.group}</td><td>${item.months}</td><td>${item.details}</td><td>${item.paid}</td><td>${item.due}</td><td><button onclick="deleteItem(${item.id})">মুছুন</button></td></tr>`;
         });
-        document.getElementById('grandTotal').innerText = tPaid;
-        document.getElementById('grandDue').innerText = tDue;
-    }
-
-    function printReceipt(id) {
-        let history = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-        let item = history.find(i => i.id === id);
-        let config = JSON.parse(localStorage.getItem('appConfig'));
-        
-        let win = window.open('', '', 'height=750,width=850');
-        win.document.write(`
-            <html>
-            <head>
-                <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
-                    body { font-family: 'Hind Siliguri', sans-serif; padding: 20px; display: flex; justify-content: center; }
-                    .receipt-border { border: 6px double #1a73e8; padding: 30px; width: 620px; background: #fff; box-sizing: border-box; }
-                    .h-box { text-align: center; border-bottom: 2px solid #1a73e8; padding-bottom: 12px; margin-bottom: 18px; }
-                    .h-box img { width: 75px; height: 75px; margin-bottom: 8px; }
-                    .h-box h1 { margin: 0; color: #1a73e8; font-size: 34px; font-weight: 700; }
-                    .h-box p { margin: 4px 0; font-size: 16px; color: #333; font-weight: 600; }
-                    .title-tag { text-align: center; background: #1a73e8 !important; color: white !important; padding: 10px; font-weight: bold; margin-bottom: 20px; border-radius: 6px; font-size: 22px; -webkit-print-color-adjust: exact; }
-                    .info-row { display: flex; justify-content: space-between; border-bottom: 1.5px dotted #999; padding: 12px 0; font-size: 19px; color: #000; }
-                    .info-row b { color: #1a73e8; }
-                    .details-box { margin-top: 15px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; min-height: 50px; font-size: 18px; background: #fafafa; color: #333; line-height: 1.5; }
-                    .amount-section { background: #f0f7ff !important; padding: 20px; border: 2.5px solid #1a73e8; display: flex; justify-content: space-between; -webkit-print-color-adjust: exact; margin-top: 25px; border-radius: 8px; font-size: 24px; }
-                    .footer { margin-top: 70px; display: flex; justify-content: space-between; }
-                    .sig { width: 190px; border-top: 2px solid #333; text-align: center; font-size: 16px; padding-top: 10px; font-weight: 700; }
-                </style>
-            </head>
-            <body>
-                <div class="receipt-border">
-                    <div class="h-box">
-                        ${config.logo ? `<img src="${config.logo}">` : ''}
-                        <h1>${config.name}</h1>
-                        <p>${config.addr} | মোবাইল: ${config.mob}</p>
-                    </div>
-                    <div class="title-tag">মানি রিসিট (শিক্ষার্থী কপি)</div>
-                    <div class="info-row"><span>নাম: <b>${item.student}</b></span><span>তারিখ: <b>${item.date}</b></span></div>
-                    <div class="info-row"><span>শ্রেণি: <b>${item.class}</b> | শাখা: <b>${item.section}</b></span><span>ID: #${item.id.toString().slice(-6)}</span></div>
-                    <div class="info-row"><span>বিভাগ: <b>${item.group}</b> | সেশন: <b>${item.session || 'N/A'}</b></span></div>
-                    <div class="info-row"><span>পরিশোধিত মাস: <b>${item.months}</b></span></div>
-                    <div style="margin-top:15px; font-weight:bold; font-size:18px; color:#555;">আদায়ের বিবরণ:</div>
-                    <div class="details-box">${item.details}</div>
-                    <div class="amount-section">
-                        <b>মোট আদায়: ৳ ${item.paid}/-</b>
-                        <b style="color:#d32f2f">বকেয়া: ৳ ${item.due}/-</b>
-                    </div>
-                    <div class="footer">
-                        <div class="sig">অভিভাবক/শিক্ষার্থীর স্বাক্ষর</div>
-                        <div class="sig">কর্তৃপক্ষের স্বাক্ষর</div>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `);
-        win.document.close();
-        setTimeout(() => { win.print(); win.close(); }, 500);
-    }
-
-    function printFullReport() {
-        const config = JSON.parse(localStorage.getItem('appConfig'));
-        const tableClone = document.getElementById('feeTable').cloneNode(true);
-        tableClone.querySelectorAll('.no-print').forEach(el => el.remove());
-        const sDate = document.getElementById('searchSDate').value;
-        const eDate = document.getElementById('searchEDate').value;
-
-        let win = window.open('', '', 'height=800,width=1200');
-        win.document.write(`
-            <html>
-            <head>
-                <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
-                    body { font-family: 'Hind Siliguri', sans-serif; padding: 30px; }
-                    .report-header { display: flex; flex-direction: column; align-items: center; text-align: center; border-bottom: 3px solid #1a73e8; padding-bottom: 15px; margin-bottom: 20px; }
-                    .report-header img { width: 80px; height: 80px; margin-bottom: 10px; }
-                    .report-header h1 { margin: 0; color: #1a73e8; font-size: 30px; }
-                    .report-header p { margin: 5px 0; color: #555; }
-                    .report-title { text-align: center; color: #d32f2f; font-size: 22px; margin: 10px 0; font-weight: bold; text-decoration: underline; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-                    th, td { border: 1px solid #000; padding: 8px; text-align: center; }
-                    th { background-color: #1a73e8 !important; color: white !important; -webkit-print-color-adjust: exact; }
-                    .total-row { background-color: #eee !important; color: #1a73e8 !important; font-weight: bold; -webkit-print-color-adjust: exact; }
-                    .footer-sig { margin-top: 80px; display: flex; justify-content: space-between; }
-                    .sig-box { border-top: 2px solid #000; width: 200px; text-align: center; padding-top: 5px; font-weight: bold; }
-                </style>
-            </head>
-            <body>
-                <div class="report-header">
-                    ${config.logo ? `<img src="${config.logo}">` : ''}
-                    <h1>${config.name}</h1>
-                    <p>${config.addr} | মোবাইল: ${config.mob}</p>
-                </div>
-                <div class="report-title">ফি আদায় রিপোর্ট</div>
-                <p style="text-align:center;"><b>তারিখ:</b> ${sDate ? sDate + ' হতে ' + eDate : 'সকল ডাটা'}</p>
-                <table>${tableClone.innerHTML}</table>
-                <div class="footer-sig"><div class="sig-box">হিসাবরক্ষক</div><div class="sig-box">প্রতিষ্ঠান প্রধান</div></div>
-            </body>
-            </html>
-        `);
-        win.document.close();
-        setTimeout(() => { win.print(); win.close(); }, 500);
-    }
-
-    function exportData() {
-        const data = { config: JSON.parse(localStorage.getItem('appConfig')), history: JSON.parse(localStorage.getItem(DB_NAME)) };
-        const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'School_Backup.json'; a.click();
     }
 
     function deleteItem(id) {
-        if(confirm("আপনি কি নিশ্চিত?")) {
-            let h = JSON.parse(localStorage.getItem(DB_NAME));
-            localStorage.setItem(DB_NAME, JSON.stringify(h.filter(i => i.id !== id)));
-            updateTable();
-        }
+        let h = JSON.parse(localStorage.getItem(DB_NAME));
+        localStorage.setItem(DB_NAME, JSON.stringify(h.filter(i => i.id !== id)));
+        updateTable();
     }
 </script>
 </body>
