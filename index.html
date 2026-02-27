@@ -2,158 +2,708 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>স্কুল ম্যানেজমেন্ট - ফি আদায় ও হিসাব খাতা</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>স্কুল ম্যানেজমেন্ট - ফি আদায় ও হিসাব খাতা (Firebase)</title>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; padding: 20px; color: #333; }
-        .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            font-family: 'Segoe UI', 'Hind Siliguri', Arial, sans-serif; 
+            background-color: #f0f2f5; 
+            padding: 20px; 
+            color: #333; 
+        }
         
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+        }
+        
+        /* Firebase Status - উপরে বাম কর্নারে */
+        .firebase-status { 
+            position: fixed; 
+            top: 20px; 
+            left: 20px; 
+            padding: 10px 20px; 
+            border-radius: 40px; 
+            font-size: 14px; 
+            font-weight: 600;
+            color: white;
+            z-index: 9999;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .connected { 
+            background: linear-gradient(135deg, #2e7d32, #1b5e20); 
+        }
+        .disconnected { 
+            background: linear-gradient(135deg, #c62828, #8e0000); 
+        }
+
+        .loader {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .school-header { 
             text-align: center; 
             margin-bottom: 20px; 
             border-bottom: 2px solid #1a73e8; 
             padding-bottom: 15px; 
             position: relative;
+            background: linear-gradient(to right, #f8f9fa, #ffffff);
         }
-        #schoolLogoImg { max-width: 80px; max-height: 80px; display: none; border-radius: 5px; margin-bottom: 10px; }
-        #headerName { margin: 0; color: #1a73e8; font-size: clamp(20px, 5vw, 30px); }
-        #headerAddress { margin: 5px 0 0; font-size: 14px; }
-
-        /* Tab Styles */
-        .tab-container { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
-        .tab-btn { padding: 10px 20px; background: none; border: none; cursor: pointer; font-size: 16px; font-weight: bold; color: #555; border-bottom: 3px solid transparent; transition: 0.3s; }
-        .tab-btn.active { color: #1a73e8; border-bottom: 3px solid #1a73e8; }
-        .tab-btn:hover { background: #f0f2f5; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        .settings-panel { display: none; background: #fffde7; border: 1px dashed #fbc02d; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .input-box, .search-panel { background: #e3f2fd; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-        .search-panel { background: #f1f8e9; border: 1px solid #dcedc8; grid-template-columns: repeat(5, 1fr); }
-        .full-row { grid-column: span 4; }
         
-        .year-month-box { background: #fff; padding: 15px; border: 1px solid #bbdefb; border-radius: 8px; margin-top: 10px; }
-        .month-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 10px; }
-        .month-item { font-size: 13px; display: flex; align-items: center; gap: 5px; cursor: pointer; background: #f9f9f9; padding: 5px; border-radius: 4px; border: 1px solid #ddd; }
+        #schoolLogoImg { 
+            max-width: 100px; 
+            max-height: 100px; 
+            display: none; 
+            border-radius: 10px; 
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
         
-        .fee-selection { grid-column: span 4; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb; }
+        #headerName { 
+            margin: 0; 
+            color: #1a73e8; 
+            font-size: clamp(24px, 5vw, 32px);
+            font-weight: 700;
+        }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; font-size: 13px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        th { background-color: #1a73e8; color: white; }
-        .total-row { background-color: #263238; color: #ffeb3b; font-weight: bold; }
+        #headerAddress { 
+            margin: 5px 0 0; 
+            font-size: 15px;
+            color: #666;
+        }
 
-        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
-        .btn-save { background: #2e7d32; width: 100%; padding: 12px; font-size: 16px; margin-top: 10px; }
-        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
-        #studentNameDisplay { font-weight: bold; color: #1565c0; background: #fff; padding: 8px; border: 1px solid #90caf9; border-radius: 4px; min-height: 20px; }
+        .header-buttons {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            display: flex;
+            gap: 10px;
+        }
 
-        .student-list-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-        .student-list-table th, .student-list-table td { border: 1px solid #ccc; padding: 5px; text-align: left; }
-        .student-list-container { max-height: 250px; overflow-y: auto; border: 1px solid #eee; margin-top: 10px; }
-        .edit-mode { border: 2px solid #ff9800 !important; background: #fff3e0; }
+        .icon-btn {
+            background: #546e7a;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
 
-        /* Income/Expense Specific Styles */
-        .ie-form { background: #e8f5e9; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; align-items: end; }
-        .summary-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .card { padding: 20px; border-radius: 8px; text-align: center; color: white; }
-        .card-income { background: #2e7d32; }
-        .card-expense { background: #c62828; }
-        .card-balance { background: #1565c0; }
-        .card h2 { margin: 0; font-size: 28px; }
-        .card p { margin: 5px 0 0; opacity: 0.9; }
+        .icon-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
 
-        @media print { .no-print { display: none !important; } }
+        .school-switcher {
+            background: #4a90e2;
+        }
+
+        .school-id-badge {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #1a73e8;
+            background: #e8f0fe;
+            padding: 5px 15px;
+            border-radius: 30px;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        .tab-container { 
+            display: flex; 
+            border-bottom: 2px solid #e0e0e0; 
+            margin-bottom: 25px;
+            gap: 5px;
+        }
+        
+        .tab-btn { 
+            padding: 12px 25px; 
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600; 
+            color: #666; 
+            border-bottom: 3px solid transparent; 
+            transition: all 0.3s;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .tab-btn.active { 
+            color: #1a73e8; 
+            border-bottom: 3px solid #1a73e8;
+            background: rgba(26, 115, 232, 0.05);
+        }
+        
+        .tab-btn:hover { 
+            background: #f0f2f5;
+            color: #1a73e8;
+        }
+        
+        .tab-content { 
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .tab-content.active { 
+            display: block; 
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .settings-panel { 
+            display: none; 
+            background: #fff3e0; 
+            border: 2px solid #ffb74d; 
+            padding: 25px; 
+            border-radius: 12px; 
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.2);
+            animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .input-box, .search-panel { 
+            background: #e3f2fd; 
+            padding: 25px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px;
+            border: 1px solid #90caf9;
+        }
+        
+        .search-panel { 
+            background: #f1f8e9; 
+            border: 1px solid #a5d6a7;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+        }
+        
+        .full-row { 
+            grid-column: 1 / -1; 
+        }
+        
+        .year-month-box { 
+            background: #fff; 
+            padding: 20px; 
+            border: 2px solid #bbdefb; 
+            border-radius: 10px; 
+            margin-top: 10px; 
+        }
+        
+        .month-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); 
+            gap: 10px; 
+            margin-top: 15px; 
+        }
+        
+        .month-item { 
+            font-size: 14px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            cursor: pointer; 
+            background: #f8f9fa; 
+            padding: 8px 12px; 
+            border-radius: 25px; 
+            border: 1px solid #dee2e6;
+            transition: all 0.2s;
+        }
+        
+        .month-item:hover {
+            background: #e3f2fd;
+            border-color: #1a73e8;
+        }
+        
+        .fee-selection { 
+            grid-column: 1 / -1; 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+            gap: 15px; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            border: 2px solid #bbdefb;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            background: white; 
+            font-size: 14px; 
+        }
+        
+        th, td { 
+            border: 1px solid #dee2e6; 
+            padding: 12px; 
+            text-align: center; 
+        }
+        
+        th { 
+            background: linear-gradient(135deg, #1a73e8, #0d47a1); 
+            color: white; 
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .total-row { 
+            background: linear-gradient(135deg, #263238, #37474f) !important; 
+            color: #ffeb3b !important; 
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .btn { 
+            padding: 10px 18px; 
+            border: none; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-save { 
+            background: linear-gradient(135deg, #2e7d32, #1b5e20); 
+            width: 100%; 
+            padding: 14px; 
+            font-size: 16px; 
+            margin-top: 15px;
+            font-weight: 700;
+        }
+        
+        .btn-edit { background: linear-gradient(135deg, #ff9800, #f57c00); }
+        .btn-delete { background: linear-gradient(135deg, #dc3545, #c82333); }
+        .btn-print { background: linear-gradient(135deg, #17a2b8, #138496); }
+        .btn-backup { background: linear-gradient(135deg, #6c757d, #495057); }
+        
+        input, select, textarea { 
+            padding: 12px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 8px; 
+            width: 100%; 
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #1a73e8;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+        }
+
+        input:hover, select:hover {
+            border-color: #90caf9;
+        }
+        
+        #studentNameDisplay { 
+            font-weight: 600; 
+            color: #1565c0; 
+            background: #fff; 
+            padding: 12px; 
+            border: 2px solid #90caf9; 
+            border-radius: 8px; 
+            min-height: 24px;
+            display: flex;
+            align-items: center;
+        }
+
+        .student-list-container { 
+            max-height: 300px; 
+            overflow-y: auto; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .student-list-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 13px; 
+        }
+        
+        .student-list-table th, .student-list-table td { 
+            border: 1px solid #dee2e6; 
+            padding: 8px; 
+            text-align: left; 
+        }
+
+        .student-list-table th {
+            background: linear-gradient(135deg, #546e7a, #37474f);
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        .edit-mode { 
+            border: 3px solid #ff9800 !important; 
+            background: #fff3e0;
+            box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
+        }
+
+        .summary-cards { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 25px; 
+        }
+        
+        .card { 
+            padding: 25px; 
+            border-radius: 12px; 
+            text-align: center; 
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .card-income { background: linear-gradient(135deg, #2e7d32, #1b5e20); }
+        .card-expense { background: linear-gradient(135deg, #c62828, #8e0000); }
+        .card-balance { background: linear-gradient(135deg, #1565c0, #0d47a1); }
+        
+        .card h2 { 
+            margin: 10px 0 0; 
+            font-size: 32px; 
+            font-weight: 700;
+        }
+        
+        .card p { 
+            margin: 0; 
+            font-size: 16px; 
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .ie-form { 
+            background: #e8f5e9; 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 15px; 
+            align-items: end;
+        }
+
+        @media print { 
+            .no-print { 
+                display: none !important; 
+            }
+            
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                padding: 10px;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .tab-btn {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            
+            .header-buttons {
+                position: static;
+                margin-top: 10px;
+                justify-content: center;
+            }
+            
+            .school-header {
+                padding-top: 10px;
+            }
+
+            .firebase-status {
+                top: 10px;
+                left: 10px;
+                font-size: 12px;
+                padding: 8px 15px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #0d47a1, #1a73e8);
+        }
     </style>
 </head>
 <body>
 
+<!-- Firebase Status Indicator - উপরে বাম কর্নারে -->
+<div id="firebaseStatus" class="firebase-status disconnected">
+    <span class="loader"></span> 
+    <span id="statusText">ফায়ারবেস সংযোগ হচ্ছে...</span>
+</div>
+
 <div class="container">
     <div class="school-header">
-        <div style="position: absolute; right: 20px; top: 20px;" class="no-print">
-            <button onclick="openSettings()" style="background:#546e7a; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">⚙️ সেটিংস</button>
+        <div class="header-buttons no-print">
+            <button onclick="switchSchool()" class="icon-btn school-switcher">
+                <span>🔄</span> স্কুল পরিবর্তন
+            </button>
+            <button onclick="openSettings()" class="icon-btn">
+                <span>⚙️</span> সেটিংস
+            </button>
         </div>
         <img id="schoolLogoImg" src="" alt="Logo">
-        <h1 id="headerName">লোডিং...</h1>
+        <h1 id="headerName">লোড হচ্ছে...</h1>
         <p id="headerAddress">অপেক্ষা করুন...</p>
+        <div class="school-id-badge">
+            <span>🏫</span> স্কুল আইডি: <span id="schoolIdDisplay">demo_school</span>
+        </div>
     </div>
 
-    <!-- TAB NAVIGATION -->
+    <!-- Tab Navigation -->
     <div class="tab-container no-print">
         <button class="tab-btn active" onclick="switchTab('feeTab')">💰 ফি আদায় ও শিক্ষার্থী</button>
         <button class="tab-btn" onclick="switchTab('accountsTab')">📊 হিসাব খাতা (আয়-ব্যয়)</button>
     </div>
 
-    <!-- SETTINGS PANEL (Global) -->
+    <!-- Settings Panel -->
     <div id="settingsArea" class="settings-panel no-print">
-        <h3>🛠 সেটিংস ও ডাটা ব্যাকআপ</h3>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+        <h3 style="margin-bottom: 15px; color: #f57c00;">🛠 সেটিংস ও ডাটা ব্যাকআপ</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
             <input type="text" id="setSchoolName" placeholder="প্রতিষ্ঠানের নাম">
             <input type="text" id="setSchoolAddr" placeholder="ঠিকানা">
             <input type="text" id="setSchoolMob" placeholder="মোবাইল নম্বর">
-            <input type="text" id="setNewPass" placeholder="নতুন পাসওয়ার্ড">
-            <div><label style="font-size:11px;">লোগো আপলোড:</label><input type="file" id="logoUpload" accept="image/*" onchange="previewLogo(this)"></div>
+            <input type="password" id="setNewPass" placeholder="নতুন পাসওয়ার্ড">
+            <div>
+                <label style="font-size:12px; color:#666;">লোগো আপলোড:</label>
+                <input type="file" id="logoUpload" accept="image/*" onchange="previewLogo(this)">
+            </div>
         </div>
 
-        <hr style="border:1px dashed #ddd;">
+        <hr style="border:1px dashed #ffb74d; margin:20px 0;">
         
-        <h3 style="color:#d32f2f;">👨‍🎓 শিক্ষার্থী তালিকা ব্যবস্থাপনা</h3>
-        <div style="background:#fff; padding:15px; border:1px solid #ddd; border-radius:5px;">
-            <div id="studentFormBox" style="background:#f9f9f9; padding:10px; border-radius:5px; margin-bottom:15px;">
-                <h4 style="margin:0 0 10px; font-size:14px;">একক শিক্ষার্থী যোগ/সম্পাদনা</h4>
-                <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:10px; margin-bottom:5px;">
+        <h3 style="color:#d32f2f; margin-bottom:15px;">👨‍🎓 শিক্ষার্থী তালিকা ব্যবস্থাপনা</h3>
+        <div style="background:#fff; padding:20px; border-radius:8px;">
+            <div id="studentFormBox" style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:20px;">
+                <h4 style="margin:0 0 15px; font-size:16px; color:#37474f;">একক শিক্ষার্থী যোগ/সম্পাদনা</h4>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:10px;">
                     <input type="text" id="newStName" placeholder="শিক্ষার্থীর নাম">
                     <input type="text" id="newStClass" placeholder="শ্রেণি">
                     <input type="number" id="newStRoll" placeholder="রোল">
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:10px;">
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px;">
                     <input type="text" id="newStSection" placeholder="শাখা">
                     <input type="text" id="newStGroup" placeholder="বিভাগ">
                     <input type="text" id="newStSession" placeholder="সেশন">
-                    <button id="addStudentBtn" onclick="saveStudentData()" class="btn" style="background:#ff9800;">যোগ করুন</button>
+                    <button id="addStudentBtn" onclick="saveStudentData()" class="btn" style="background:#ff9800; width:100%;">➕ যোগ করুন</button>
                 </div>
             </div>
-             <div style="display:grid; grid-template-columns: 1fr auto; gap:10px; align-items: end;">
+            
+            <div style="display:grid; grid-template-columns:1fr auto; gap:15px; align-items: center; margin-bottom:15px;">
                 <div>
-                    <label style="font-size:11px; color:#666;">CSV: Name, Class, Roll, Section, Group, Session</label>
-                    <input type="file" id="csvStudentFile" accept=".csv">
+                    <label style="font-size:12px; color:#666;">CSV: নাম, শ্রেণি, রোল, শাখা, বিভাগ, সেশন</label>
+                    <input type="file" id="csvStudentFile" accept=".csv" style="padding:8px;">
                 </div>
-                <button onclick="uploadStudentCSV()" class="btn" style="background:#009688;">CSV আপলোড</button>
+                <button onclick="uploadStudentCSV()" class="btn" style="background:#009688;">📤 CSV আপলোড</button>
             </div>
+            
             <div class="student-list-container">
                 <table class="student-list-table">
-                    <thead><tr><th>নাম</th><th>শ্রেণি</th><th>রোল</th><th>শাখা</th><th>বিভাগ</th><th>সেশন</th><th>অ্যাকশন</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>নাম</th>
+                            <th>শ্রেণি</th>
+                            <th>রোল</th>
+                            <th>শাখা</th>
+                            <th>বিভাগ</th>
+                            <th>সেশন</th>
+                            <th>অ্যাকশন</th>
+                        </tr>
+                    </thead>
                     <tbody id="studentListPreviewBody"></tbody>
                 </table>
             </div>
         </div>
 
-        <hr style="border:1px dashed #ddd; margin-top:15px;">
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button onclick="exportData()" class="btn" style="background:#1565c0;">💾 ব্যাকআপ</button>
-            <input type="file" id="importFile" accept=".json" onchange="importData(this)" style="width: auto;">
-        </div>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button onclick="saveSettings()" class="btn" style="background:#2e7d32; flex:1;">সেটিংস সেভ করুন</button>
-            <button onclick="document.getElementById('settingsArea').style.display='none'" class="btn" style="background:#757575; flex:1;">বন্ধ করুন</button>
+        <hr style="border:1px dashed #ffb74d; margin:20px 0;">
+        
+        <div style="display:flex; gap:15px; flex-wrap: wrap;">
+            <button onclick="exportData()" class="btn btn-backup">💾 ব্যাকআপ নিন</button>
+            <div style="flex:1;">
+                <input type="file" id="importFile" accept=".json" onchange="importData(this)" style="padding:8px;">
+            </div>
+            <button onclick="saveSettings()" class="btn btn-save" style="width:auto;">সেটিংস সেভ করুন</button>
+            <button onclick="document.getElementById('settingsArea').style.display='none'" class="btn btn-delete">বন্ধ করুন</button>
         </div>
     </div>
 
-    <!-- TAB 1: FEE COLLECTION -->
+    <!-- Fee Collection Tab -->
     <div id="feeTab" class="tab-content active">
         <div class="input-box no-print">
-            <div><label>রোল:</label><input type="number" id="rollInput" oninput="findStudent()"></div>
-            <div><label>শ্রেণি:</label><select id="classSelect" onchange="findStudent()"><option value="One">One</option><option value="Two">Two</option><option value="Three">Three</option><option value="Four">Four</option><option value="Five">Five</option><option value="Six">Six</option><option value="Seven">Seven</option><option value="Eight">Eight</option><option value="Nine">Nine</option><option value="Ten">Ten</option><option value="Eleven">Eleven</option><option value="Twelve">Twelve</option></select></div>
-            <div><label>শাখা:</label><select id="sectionSelect"><option value="A">A</option><option value="B">B</option><option value="N/A">N/A</option></select></div>
-            <div><label>বিভাগ:</label><select id="groupSelect"><option value="General">General</option><option value="Science">Science</option><option value="Commerce">Commerce</option><option value="Humanities">Humanities</option></select></div>
+            <div>
+                <label>📋 রোল:</label>
+                <input type="number" id="rollInput" oninput="findStudent()" placeholder="রোল নম্বর">
+            </div>
+            <div>
+                <label>📚 শ্রেণি:</label>
+                <select id="classSelect" onchange="findStudent()">
+                    <option value="One">One</option>
+                    <option value="Two">Two</option>
+                    <option value="Three">Three</option>
+                    <option value="Four">Four</option>
+                    <option value="Five">Five</option>
+                    <option value="Six">Six</option>
+                    <option value="Seven">Seven</option>
+                    <option value="Eight">Eight</option>
+                    <option value="Nine">Nine</option>
+                    <option value="Ten">Ten</option>
+                    <option value="Eleven">Eleven</option>
+                    <option value="Twelve">Twelve</option>
+                </select>
+            </div>
+            <div>
+                <label>📌 শাখা:</label>
+                <select id="sectionSelect">
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="N/A">N/A</option>
+                </select>
+            </div>
+            <div>
+                <label>🔬 বিভাগ:</label>
+                <select id="groupSelect">
+                    <option value="General">General</option>
+                    <option value="Science">Science</option>
+                    <option value="Commerce">Commerce</option>
+                    <option value="Humanities">Humanities</option>
+                </select>
+            </div>
             
-            <div style="grid-column: span 2;"><label>নাম:</label><div id="studentNameDisplay">রোল ও শ্রেণি দিন...</div></div>
-            <div><label>সেশন:</label><input type="text" id="sessionInput" placeholder="২০২৪-২৫"></div>
-            <div><label>তারিখ:</label><input type="date" id="entryDate"></div>
+            <div style="grid-column: span 2;">
+                <label>👤 নাম:</label>
+                <div id="studentNameDisplay">রোল ও শ্রেণি দিন...</div>
+            </div>
+            <div>
+                <label>📅 সেশন:</label>
+                <input type="text" id="sessionInput" placeholder="২০২৪-২৫">
+            </div>
+            <div>
+                <label>🗓️ তারিখ:</label>
+                <input type="date" id="entryDate">
+            </div>
             
             <div class="full-row year-month-box">
-                <input type="number" id="targetYear" style="width: 100px;" value="2026">
-                <button onclick="addSelectedMonths()" class="btn" style="background: #1a73e8; font-size: 12px;">+ মাস যুক্ত করুন</button>
-                <span id="addedMonthsDisplay" style="font-weight:bold; margin-left:10px; color:red;">কিছু না</span>
+                <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+                    <div>
+                        <label>📅 বছর:</label>
+                        <input type="number" id="targetYear" style="width: 100px;" value="2026">
+                    </div>
+                    <button onclick="addSelectedMonths()" class="btn" style="background: #1a73e8;">+ মাস যুক্ত করুন</button>
+                    <span id="addedMonthsDisplay" style="font-weight:bold; color:#1a73e8; background:#e3f2fd; padding:5px 15px; border-radius:20px;">কিছু না</span>
+                </div>
                 <div class="month-grid">
                     <label class="month-item"><input type="checkbox" name="months" value="জানু"> জানু</label>
                     <label class="month-item"><input type="checkbox" name="months" value="ফেব্রু"> ফেব্রু</label>
@@ -171,197 +721,374 @@
             </div>
 
             <div class="fee-selection">
-                <div>মাসিক ফি<input type="number" id="valM" placeholder="0"><input type="checkbox" id="checkM"></div>
-                <div>সেশন ফি<input type="number" id="valS" placeholder="0"><input type="checkbox" id="checkS"></div>
-                <div>পরীক্ষা ফি<input type="number" id="valE" placeholder="0"><input type="checkbox" id="checkE"></div>
-                <div>অন্যান্য<input type="number" id="valO" placeholder="0"><input type="checkbox" id="checkO"></div>
-                <div>বকেয়া<input type="number" id="valDue" style="color:red" placeholder="0"></div>
+                <div>
+                    <label>মাসিক ফি</label>
+                    <input type="number" id="valM" placeholder="0">
+                    <label style="display:flex; align-items:center; gap:5px; margin-top:5px;">
+                        <input type="checkbox" id="checkM"> অন্তর্ভুক্ত
+                    </label>
+                </div>
+                <div>
+                    <label>সেশন ফি</label>
+                    <input type="number" id="valS" placeholder="0">
+                    <label style="display:flex; align-items:center; gap:5px; margin-top:5px;">
+                        <input type="checkbox" id="checkS"> অন্তর্ভুক্ত
+                    </label>
+                </div>
+                <div>
+                    <label>পরীক্ষা ফি</label>
+                    <input type="number" id="valE" placeholder="0">
+                    <label style="display:flex; align-items:center; gap:5px; margin-top:5px;">
+                        <input type="checkbox" id="checkE"> অন্তর্ভুক্ত
+                    </label>
+                </div>
+                <div>
+                    <label>অন্যান্য</label>
+                    <input type="number" id="valO" placeholder="0">
+                    <label style="display:flex; align-items:center; gap:5px; margin-top:5px;">
+                        <input type="checkbox" id="checkO"> অন্তর্ভুক্ত
+                    </label>
+                </div>
+                <div>
+                    <label>বকেয়া</label>
+                    <input type="number" id="valDue" style="color:red; border-color:#ff9800;" placeholder="0">
+                </div>
             </div>
-            <div class="full-row"><button id="saveBtn" onclick="saveData()" class="btn btn-save">সেভ করুন</button></div>
+            <div class="full-row">
+                <button id="saveBtn" onclick="saveData()" class="btn btn-save">💰 ফি সেভ করুন</button>
+            </div>
         </div>
 
         <div class="search-panel no-print">
-            <div style="grid-column: span 2;"><label>🔍 অনুসন্ধান:</label><input type="text" id="searchIndi" placeholder="নাম/রোল..." onkeyup="updateTable()"></div>
-            <div><label>শ্রেণি:</label><select id="searchCls" onchange="updateTable()"><option value="">সব শ্রেণি</option><option value="One">One</option><option value="Two">Two</option><option value="Three">Three</option><option value="Four">Four</option><option value="Five">Five</option><option value="Six">Six</option><option value="Seven">Seven</option><option value="Eight">Eight</option><option value="Nine">Nine</option><option value="Ten">Ten</option><option value="Eleven">Eleven</option><option value="Twelve">Twelve</option></select></div>
-            <div><label>বিভাগ:</label><select id="searchGroup" onchange="updateTable()"><option value="">সব বিভাগ</option><option value="General">General</option><option value="Science">Science</option><option value="Commerce">Commerce</option><option value="Humanities">Humanities</option></select></div>
-            <div><label>সেশন:</label><input type="text" id="searchSes" placeholder="২০২৪-২৫" onkeyup="updateTable()"></div>
-            <div><label>শুরুর তারিখ:</label><input type="date" id="searchSDate" onchange="updateTable()"></div>
-            <div><label>শেষ তারিখ:</label><input type="date" id="searchEDate" onchange="updateTable()"></div>
-            <div style="grid-column: span 3; display: flex; align-items: flex-end;">
-                <button onclick="printFullReport()" class="btn" style="background:#5c6bc0; width: 100%; height: 40px; font-size: 15px;">📊 রিপোর্ট প্রিন্ট করুন</button>
+            <div style="grid-column: span 2;">
+                <label>🔍 অনুসন্ধান:</label>
+                <input type="text" id="searchIndi" placeholder="নাম/রোল..." onkeyup="updateTable()">
+            </div>
+            <div>
+                <label>শ্রেণি:</label>
+                <select id="searchCls" onchange="updateTable()">
+                    <option value="">সব শ্রেণি</option>
+                    <option value="One">One</option>
+                    <option value="Two">Two</option>
+                    <option value="Three">Three</option>
+                    <option value="Four">Four</option>
+                    <option value="Five">Five</option>
+                    <option value="Six">Six</option>
+                    <option value="Seven">Seven</option>
+                    <option value="Eight">Eight</option>
+                    <option value="Nine">Nine</option>
+                    <option value="Ten">Ten</option>
+                    <option value="Eleven">Eleven</option>
+                    <option value="Twelve">Twelve</option>
+                </select>
+            </div>
+            <div>
+                <label>বিভাগ:</label>
+                <select id="searchGroup" onchange="updateTable()">
+                    <option value="">সব বিভাগ</option>
+                    <option value="General">General</option>
+                    <option value="Science">Science</option>
+                    <option value="Commerce">Commerce</option>
+                    <option value="Humanities">Humanities</option>
+                </select>
+            </div>
+            <div>
+                <label>সেশন:</label>
+                <input type="text" id="searchSes" placeholder="২০২৪-২৫" onkeyup="updateTable()">
+            </div>
+            <div>
+                <label>শুরুর তারিখ:</label>
+                <input type="date" id="searchSDate" onchange="updateTable()">
+            </div>
+            <div>
+                <label>শেষ তারিখ:</label>
+                <input type="date" id="searchEDate" onchange="updateTable()">
+            </div>
+            <div style="grid-column: span 2;">
+                <button onclick="printFullReport()" class="btn" style="background:#5c6bc0; width:100%;">📊 সম্পূর্ণ রিপোর্ট প্রিন্ট</button>
             </div>
         </div>
 
-        <table id="feeTable">
-            <thead>
-                <tr>
-                    <th>তারিখ</th>
-                    <th>নাম ও রোল</th>
-                    <th>শ্রেণি</th>
-                    <th>বিভাগ</th> <th>মাস</th>
-                    <th>আদায়ের বিবরণ</th>
-                    <th>আদায়</th>
-                    <th>বকেয়া</th>
-                    <th class="no-print">অ্যাকশন</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-            <tfoot>
-                <tr class="total-row">
-                    <td colspan="6">সর্বমোট:</td>
-                    <td id="grandTotal">0</td>
-                    <td id="grandDue">0</td>
-                    <td class="no-print"></td>
-                </tr>
-            </tfoot>
-        </table>
+        <div class="table-container">
+            <table id="feeTable">
+                <thead>
+                    <tr>
+                        <th>তারিখ</th>
+                        <th>নাম ও রোল</th>
+                        <th>শ্রেণি</th>
+                        <th>বিভাগ</th>
+                        <th>মাস</th>
+                        <th>আদায়ের বিবরণ</th>
+                        <th>আদায় (৳)</th>
+                        <th>বকেয়া (৳)</th>
+                        <th class="no-print">অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="6">সর্বমোট:</td>
+                        <td id="grandTotal">0</td>
+                        <td id="grandDue">0</td>
+                        <td class="no-print"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
 
-    <!-- TAB 2: INCOME & EXPENSE -->
+    <!-- Income & Expense Tab -->
     <div id="accountsTab" class="tab-content">
-        <!-- Summary Cards -->
         <div class="summary-cards">
             <div class="card card-income">
-                <p>মোট আয়</p>
+                <p>📈 মোট আয়</p>
                 <h2 id="totalIncomeDisplay">৳0</h2>
             </div>
             <div class="card card-expense">
-                <p>মোট খরচ</p>
+                <p>📉 মোট খরচ</p>
                 <h2 id="totalExpenseDisplay">৳0</h2>
             </div>
             <div class="card card-balance">
-                <p>বর্তমান ব্যালেন্স</p>
+                <p>💰 বর্তমান ব্যালেন্স</p>
                 <h2 id="totalBalanceDisplay">৳0</h2>
             </div>
         </div>
 
-        <!-- Add Income/Expense Form -->
         <div class="ie-form no-print">
-            <div><label>তারিখ:</label><input type="date" id="ieDate"></div>
-            <div><label>ধরন:</label><select id="ieType" onchange="updateIECategory()">
-                <option value="Income">আয় (Income)</option>
-                <option value="Expense">খরচ (Expense)</option>
-            </select></div>
-            <div><label>ক্যাটাগরি:</label><select id="ieCategory">
-                <option value="ফি আদায় (স্বয়ংক্রিয়)">ফি আদায় (স্বয়ংক্রিয়)</option>
-                <option value="দান/অনুদান">দান/অনুদান</option>
-                <option value="বেতন">বেতন</option>
-                <option value="বিদ্যুৎ বিল">বিদ্যুৎ বিল</option>
-                <option value="অফিস খরচ">অফিস খরচ</option>
-                <option value="অন্যান্য">অন্যান্য</option>
-            </select></div>
-            <div><label>টাকার পরিমাণ:</label><input type="number" id="ieAmount" placeholder="0"></div>
-            <div><label>বিবরণ:</label><input type="text" id="ieDesc" placeholder="বিবরণ লিখুন...">
-                 <button onclick="saveIEData()" class="btn" style="background:#2e7d32; margin-top:10px;">যোগ করুন</button>
+            <div>
+                <label>🗓️ তারিখ:</label>
+                <input type="date" id="ieDate">
+            </div>
+            <div>
+                <label>📋 ধরন:</label>
+                <select id="ieType" onchange="updateIECategory()">
+                    <option value="Income">➕ আয় (Income)</option>
+                    <option value="Expense">➖ খরচ (Expense)</option>
+                </select>
+            </div>
+            <div>
+                <label>🏷️ ক্যাটাগরি:</label>
+                <select id="ieCategory"></select>
+            </div>
+            <div>
+                <label>💰 টাকার পরিমাণ:</label>
+                <input type="number" id="ieAmount" placeholder="0">
+            </div>
+            <div>
+                <label>📝 বিবরণ:</label>
+                <input type="text" id="ieDesc" placeholder="বিবরণ লিখুন...">
+            </div>
+            <div style="grid-column: 1 / -1;">
+                <button onclick="saveIEData()" class="btn" style="background:#2e7d32; width:200px; margin:0 auto;">➕ লেনদেন যোগ করুন</button>
             </div>
         </div>
 
-        <!-- Search IE -->
         <div class="search-panel no-print" style="grid-template-columns: repeat(3, 1fr);">
-             <div><label>শুরুর তারিখ:</label><input type="date" id="ieSearchSDate" onchange="updateIETable()"></div>
-             <div><label>শেষ তারিখ:</label><input type="date" id="ieSearchEDate" onchange="updateIETable()"></div>
-             <div><label>ধরন:</label><select id="ieSearchType" onchange="updateIETable()">
-                 <option value="">সব</option>
-                 <option value="Income">আয়</option>
-                 <option value="Expense">খরচ</option>
-             </select></div>
+            <div>
+                <label>শুরুর তারিখ:</label>
+                <input type="date" id="ieSearchSDate" onchange="updateIETable()">
+            </div>
+            <div>
+                <label>শেষ তারিখ:</label>
+                <input type="date" id="ieSearchEDate" onchange="updateIETable()">
+            </div>
+            <div>
+                <label>ধরন:</label>
+                <select id="ieSearchType" onchange="updateIETable()">
+                    <option value="">সব</option>
+                    <option value="Income">আয়</option>
+                    <option value="Expense">খরচ</option>
+                </select>
+            </div>
         </div>
 
-        <table id="ieTable">
-            <thead>
-                <tr>
-                    <th>তারিখ</th>
-                    <th>ধরন</th>
-                    <th>ক্যাটাগরি</th>
-                    <th>বিবরণ</th>
-                    <th>টাকা</th>
-                    <th class="no-print">অ্যাকশন</th>
-                </tr>
-            </thead>
-            <tbody id="ieTableBody"></tbody>
-        </table>
+        <div class="table-container">
+            <table id="ieTable">
+                <thead>
+                    <tr>
+                        <th>তারিখ</th>
+                        <th>ধরন</th>
+                        <th>ক্যাটাগরি</th>
+                        <th>বিবরণ</th>
+                        <th>টাকা (৳)</th>
+                        <th class="no-print">অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody id="ieTableBody"></tbody>
+            </table>
+        </div>
     </div>
-
 </div>
 
 <script>
-    // --- DB KEYS ---
-    const DB_NAME = 'universalDB_v12';
-    const STUDENT_DB = 'studentListDB_v2';
-    const IE_DB = 'incomeExpenseDB_v1'; 
-    
-    let finalMonthsList = [];
-    let tempLogoBase64 = "";
-    let students = []; 
-    let currentEditId = null; 
-    let editingStudentIndex = null; 
-
-    window.onload = function() {
-        loadStudentList(); 
-        let config = JSON.parse(localStorage.getItem('appConfig'));
-        if (!config) {
-            config = { name: "প্রতিষ্ঠানের নাম", addr: "ঠিকানা", mob: "মোবাইল", pass: "1234", logo: "" };
-            localStorage.setItem('appConfig', JSON.stringify(config));
-        }
-        loadSettings();
-        updateTable();
-        updateIETable(); 
-        calculateTotals(); 
-        updateIECategory(); 
+    // ==================== FIREBASE CONFIGURATION ====================
+    // আপনার দেওয়া নতুন Firebase Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3dVdnAb9Ug5UgSeGs7pHzxV0LjiPaNSo",
+        authDomain: "fee-collection-b7963.firebaseapp.com",
+        projectId: "fee-collection-b7963",
+        storageBucket: "fee-collection-b7963.firebasestorage.app",
+        messagingSenderId: "884240243315",
+        appId: "1:884240243315:web:fe6daf34b9065f88c2e806",
+        measurementId: "G-1669910LWS"
     };
 
-    // --- Helper: Date Format ---
-    function formatDate(dateStr) {
-        if (!dateStr) return "";
-        const parts = dateStr.split('-');
-        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        return dateStr;
-    }
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    
+    // Enable offline persistence
+    db.enablePersistence()
+        .then(() => console.log('✅ Offline persistence enabled'))
+        .catch(err => console.log('Persistence error:', err));
 
-    // --- Tab Switching ---
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        if(tabId === 'feeTab') document.querySelectorAll('.tab-btn')[0].classList.add('active');
-        else document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    // ==================== GLOBAL VARIABLES ====================
+    let students = [];
+    let finalMonthsList = [];
+    let tempLogoBase64 = "";
+    let currentEditId = null;
+    let editingStudentIndex = null;
+
+    // Get School ID from URL
+    function getSchoolId() {
+        const urlParams = new URLSearchParams(window.location.search);
+        let schoolId = urlParams.get('id');
         
-        if(tabId === 'accountsTab') {
-            updateIETable();
-            calculateTotals();
+        if (!schoolId) {
+            schoolId = 'demo_school';
+            const url = new URL(window.location);
+            url.searchParams.set('id', schoolId);
+            window.history.replaceState({}, '', url);
+        }
+        return schoolId;
+    }
+
+    const SCHOOL_ID = getSchoolId();
+    
+    // Helper function for Firebase collections
+    function getCollection(collectionName) {
+        return db.collection('schools').doc(SCHOOL_ID).collection(collectionName);
+    }
+
+    // ==================== FIREBASE STATUS ====================
+    function updateFirebaseStatus(status, message = '') {
+        const statusDiv = document.getElementById('firebaseStatus');
+        const statusText = document.getElementById('statusText');
+        
+        if (status === 'connected') {
+            statusDiv.className = 'firebase-status connected';
+            statusText.innerText = `✅ ${SCHOOL_ID} সংযুক্ত`;
+        } else {
+            statusDiv.className = 'firebase-status disconnected';
+            statusText.innerText = `❌ ${message || 'সংযোগ ব্যর্থ'}`;
         }
     }
 
-    // --- Student Management (Settings) ---
-    function loadStudentList() {
-        let storedStudents = localStorage.getItem(STUDENT_DB);
-        if (storedStudents) students = JSON.parse(storedStudents);
-        else {
-            students = [
-                { roll: 101, class: "One", name: "রহিম আহমেদ", section: "A", group: "General", session: "২০২৪" },
-                { roll: 102, class: "One", name: "সাব্বির হোসেন", section: "B", group: "General", session: "২০২৪" },
-                { roll: 101, class: "Ten", name: "করিম উল্লাহ", section: "A", group: "Science", session: "২০২৪" }
-            ];
-            saveStudentList();
+    // Check Firebase Connection
+    async function checkFirebaseConnection() {
+        try {
+            const testRef = getCollection('_test_').doc('connection_test');
+            await testRef.set({ 
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                schoolId: SCHOOL_ID 
+            });
+            setTimeout(() => testRef.delete(), 1000);
+            updateFirebaseStatus('connected');
+            return true;
+        } catch (error) {
+            console.error('Firebase connection error:', error);
+            updateFirebaseStatus('disconnected', error.message);
+            return false;
         }
-        renderStudentPreview();
     }
-    function saveStudentList() { localStorage.setItem(STUDENT_DB, JSON.stringify(students)); }
+
+    // ==================== STUDENT MANAGEMENT ====================
+    async function loadStudentList() {
+        try {
+            const isConnected = await checkFirebaseConnection();
+            
+            if (isConnected) {
+                const snapshot = await getCollection('students').get();
+                students = [];
+                snapshot.forEach(doc => {
+                    students.push({ id: doc.id, ...doc.data() });
+                });
+            }
+            
+            const localStudents = localStorage.getItem(getStorageKey('students'));
+            
+            if (students.length === 0) {
+                if (localStudents) {
+                    students = JSON.parse(localStudents);
+                } else {
+                    // Sample data
+                    students = [
+                        { name: "রহিম আহমেদ", class: "One", roll: 101, section: "A", group: "General", session: "২০২৪" },
+                        { name: "সাব্বির হোসেন", class: "One", roll: 102, section: "B", group: "General", session: "২০২৪" },
+                        { name: "করিম উল্লাহ", class: "Ten", roll: 101, section: "A", group: "Science", session: "২০২৪" }
+                    ];
+                }
+            }
+            
+            renderStudentPreview();
+            
+            localStorage.setItem(getStorageKey('students'), JSON.stringify(students));
+            
+            if (isConnected) {
+                await saveStudentListToFirebase();
+            }
+            
+        } catch (error) {
+            console.error('Error loading students:', error);
+            const localStudents = localStorage.getItem(getStorageKey('students'));
+            if (localStudents) {
+                students = JSON.parse(localStudents);
+                renderStudentPreview();
+            }
+        }
+    }
+
+    async function saveStudentListToFirebase() {
+        try {
+            const batch = db.batch();
+            const collectionRef = getCollection('students');
+            
+            const snapshot = await collectionRef.get();
+            snapshot.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            
+            students.forEach(student => {
+                const docRef = collectionRef.doc();
+                batch.set(docRef, student);
+            });
+            
+            await batch.commit();
+        } catch (error) {
+            console.error('Error saving to Firebase:', error);
+        }
+    }
+
     function renderStudentPreview() {
         const tbody = document.getElementById('studentListPreviewBody');
         if (!tbody) return;
         tbody.innerHTML = "";
         students.forEach((s, index) => {
             tbody.innerHTML += `<tr>
-                <td>${s.name}</td><td>${s.class}</td><td>${s.roll}</td><td>${s.section || 'N/A'}</td>
-                <td>${s.group || 'N/A'}</td><td>${s.session || 'N/A'}</td>
+                <td>${s.name}</td>
+                <td>${s.class}</td>
+                <td>${s.roll}</td>
+                <td>${s.section || 'N/A'}</td>
+                <td>${s.group || 'N/A'}</td>
+                <td>${s.session || 'N/A'}</td>
                 <td>
-                    <button onclick="editStudentEntry(${index})" style="cursor:pointer; border:none; background:none; color:blue; font-size:16px;">✎</button>
-                    <button onclick="deleteStudentEntry(${index})" style="cursor:pointer; border:none; background:none; color:red; font-size:16px;">✕</button>
+                    <button onclick="editStudentEntry(${index})" style="background:#ff9800; color:white; border:none; padding:3px 8px; border-radius:4px; cursor:pointer; margin-right:5px;">✎</button>
+                    <button onclick="deleteStudentEntry(${index})" style="background:#dc3545; color:white; border:none; padding:3px 8px; border-radius:4px; cursor:pointer;">✕</button>
                 </td>
             </tr>`;
         });
     }
+
     function saveStudentData() {
         const name = document.getElementById('newStName').value.trim();
         const cls = document.getElementById('newStClass').value.trim();
@@ -369,45 +1096,68 @@
         const section = document.getElementById('newStSection').value.trim() || "N/A";
         const group = document.getElementById('newStGroup').value.trim() || "General";
         const session = document.getElementById('newStSession').value.trim() || "N/A";
-        if (!name || !cls || !roll) { alert("নাম, শ্রেণি ও রোল দিন।"); return; }
+        
+        if (!name || !cls || !roll) { 
+            alert("নাম, শ্রেণি ও রোল দিন।"); 
+            return; 
+        }
 
         if (editingStudentIndex !== null) {
             students[editingStudentIndex] = { name, class: cls, roll: parseInt(roll), section, group, session };
             editingStudentIndex = null;
-            document.getElementById('addStudentBtn').innerText = "যোগ করুন";
+            document.getElementById('addStudentBtn').innerText = "➕ যোগ করুন";
             document.getElementById('studentFormBox').classList.remove('edit-mode');
         } else {
             const exists = students.find(s => s.class === cls && s.roll == roll);
-            if (exists) { alert("এই শ্রেণি ও রোলে ইতিমধ্যে একজন আছেন।"); return; }
+            if (exists) { 
+                alert("এই শ্রেণি ও রোলে ইতিমধ্যে একজন আছেন।"); 
+                return; 
+            }
             students.push({ name, class: cls, roll: parseInt(roll), section, group, session });
         }
-        saveStudentList();
+        
+        localStorage.setItem(getStorageKey('students'), JSON.stringify(students));
+        saveStudentListToFirebase().catch(e => console.log('Firebase save failed:', e));
         renderStudentPreview();
         clearStudentForm();
     }
+
     function clearStudentForm() {
-        document.getElementById('newStName').value = ''; document.getElementById('newStClass').value = '';
-        document.getElementById('newStRoll').value = ''; document.getElementById('newStSection').value = '';
-        document.getElementById('newStGroup').value = ''; document.getElementById('newStSession').value = '';
+        document.getElementById('newStName').value = '';
+        document.getElementById('newStClass').value = '';
+        document.getElementById('newStRoll').value = '';
+        document.getElementById('newStSection').value = '';
+        document.getElementById('newStGroup').value = '';
+        document.getElementById('newStSession').value = '';
     }
+
     function editStudentEntry(index) {
         const s = students[index];
-        document.getElementById('newStName').value = s.name; document.getElementById('newStClass').value = s.class;
-        document.getElementById('newStRoll').value = s.roll; document.getElementById('newStSection').value = s.section;
-        document.getElementById('newStGroup').value = s.group; document.getElementById('newStSession').value = s.session;
+        document.getElementById('newStName').value = s.name;
+        document.getElementById('newStClass').value = s.class;
+        document.getElementById('newStRoll').value = s.roll;
+        document.getElementById('newStSection').value = s.section;
+        document.getElementById('newStGroup').value = s.group;
+        document.getElementById('newStSession').value = s.session;
         editingStudentIndex = index;
-        document.getElementById('addStudentBtn').innerText = "আপডেট করুন";
+        document.getElementById('addStudentBtn').innerText = "🔄 আপডেট করুন";
         document.getElementById('studentFormBox').classList.add('edit-mode');
     }
+
     function deleteStudentEntry(index) {
-        if(confirm("মুছবেন?")) {
-            students.splice(index, 1); saveStudentList(); renderStudentPreview();
+        if(confirm("শিক্ষার্থীকে মুছবেন?")) {
+            students.splice(index, 1);
+            localStorage.setItem(getStorageKey('students'), JSON.stringify(students));
+            saveStudentListToFirebase().catch(e => console.log('Firebase save failed:', e));
+            renderStudentPreview();
         }
     }
+
     function uploadStudentCSV() {
         const fileInput = document.getElementById('csvStudentFile');
         const file = fileInput.files[0];
         if (!file) return;
+        
         const reader = new FileReader();
         reader.onload = function(e) {
             const lines = e.target.result.split('\n');
@@ -416,61 +1166,43 @@
                 const p = lines[i].split(',');
                 if (p.length >= 3 && p[0].trim() && p[1].trim() && p[2].trim()) {
                     if (!students.find(s => s.class === p[1].trim() && s.roll == p[2].trim())) {
-                        students.push({ name: p[0].trim(), class: p[1].trim(), roll: parseInt(p[2].trim()), section: p[3]?p[3].trim():"N/A", group: p[4]?p[4].trim():"General", session: p[5]?p[5].trim():"N/A" });
+                        students.push({ 
+                            name: p[0].trim(), 
+                            class: p[1].trim(), 
+                            roll: parseInt(p[2].trim()), 
+                            section: p[3]?p[3].trim():"N/A", 
+                            group: p[4]?p[4].trim():"General", 
+                            session: p[5]?p[5].trim():"N/A" 
+                        });
                         count++;
                     }
                 }
             }
-            saveStudentList(); renderStudentPreview(); alert(`${count} জন যোগ হয়েছে`);
+            localStorage.setItem(getStorageKey('students'), JSON.stringify(students));
+            saveStudentListToFirebase().catch(e => console.log('Firebase save failed:', e));
+            renderStudentPreview();
+            alert(`${count} জন নতুন শিক্ষার্থী যোগ হয়েছে`);
         };
         reader.readAsText(file);
     }
 
-    // --- Core Settings ---
-    function loadSettings() {
-        const config = JSON.parse(localStorage.getItem('appConfig'));
-        document.getElementById('headerName').innerText = config.name;
-        document.getElementById('headerAddress').innerText = config.addr + " | " + config.mob;
-        if(config.logo) { document.getElementById('schoolLogoImg').src = config.logo; document.getElementById('schoolLogoImg').style.display = "block"; }
-    }
-    function previewLogo(input) {
-        if (input.files && input.files[0]) {
-            let reader = new FileReader();
-            reader.onload = (e) => { tempLogoBase64 = e.target.result; };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-    function openSettings() {
-        const config = JSON.parse(localStorage.getItem('appConfig'));
-        if(prompt("পাসওয়ার্ড দিন:") === config.pass) document.getElementById('settingsArea').style.display = "block";
-        else alert("ভুল পাসওয়ার্ড!");
-    }
-    function saveSettings() {
-        const current = JSON.parse(localStorage.getItem('appConfig'));
-        const config = {
-            name: document.getElementById('setSchoolName').value || current.name,
-            addr: document.getElementById('setSchoolAddr').value || current.addr,
-            mob: document.getElementById('setSchoolMob').value || current.mob,
-            pass: document.getElementById('setNewPass').value || current.pass,
-            logo: tempLogoBase64 || current.logo
-        };
-        localStorage.setItem('appConfig', JSON.stringify(config));
-        location.reload();
-    }
-
-    // --- Fee Collection Logic ---
+    // ==================== FEE COLLECTION ====================
     function findStudent() {
         const roll = document.getElementById('rollInput').value;
         const sClass = document.getElementById('classSelect').value;
         const student = students.find(s => s.roll == roll && s.class == sClass);
         const nameDisplay = document.getElementById('studentNameDisplay');
+        
         if (student) {
-            nameDisplay.innerText = student.name + " (রোল: " + student.roll + ")";
+            nameDisplay.innerText = `${student.name} (রোল: ${student.roll})`;
             if(student.section) document.getElementById('sectionSelect').value = student.section;
             if(student.group) document.getElementById('groupSelect').value = student.group;
             if(student.session) document.getElementById('sessionInput').value = student.session;
-        } else nameDisplay.innerText = "পাওয়া যায়নি!";
+        } else {
+            nameDisplay.innerText = "⚠️ পাওয়া যায়নি!";
+        }
     }
+
     function addSelectedMonths() {
         let year = document.getElementById('targetYear').value;
         document.querySelectorAll('input[name="months"]:checked').forEach(cb => {
@@ -481,90 +1213,197 @@
         document.getElementById('addedMonthsDisplay').innerText = finalMonthsList.join(", ");
     }
 
-    // --- SAVE FEE DATA & SYNC TO INCOME ---
-    function saveData() {
+    async function loadFeeHistory() {
+        try {
+            const snapshot = await getCollection('fees')
+                .orderBy('date', 'desc')
+                .get();
+            
+            const history = [];
+            snapshot.forEach(doc => {
+                history.push({ id: doc.id, ...doc.data() });
+            });
+            return history;
+        } catch (error) {
+            console.error('Error loading fees:', error);
+            const localFees = localStorage.getItem(getStorageKey('fees'));
+            return localFees ? JSON.parse(localFees) : [];
+        }
+    }
+
+    async function saveFeeRecord(entryData) {
+        try {
+            const collectionRef = getCollection('fees');
+            
+            if (entryData.id) {
+                await collectionRef.doc(entryData.id.toString()).set(entryData);
+            } else {
+                entryData.id = Date.now();
+                await collectionRef.doc(entryData.id.toString()).set(entryData);
+            }
+            
+            let localFees = JSON.parse(localStorage.getItem(getStorageKey('fees')) || '[]');
+            localFees = localFees.filter(f => f.id !== entryData.id);
+            localFees.push(entryData);
+            localStorage.setItem(getStorageKey('fees'), JSON.stringify(localFees));
+            
+            return entryData.id;
+        } catch (error) {
+            console.error('Error saving fee:', error);
+            throw error;
+        }
+    }
+
+    async function deleteFeeRecord(id) {
+        try {
+            await getCollection('fees').doc(id.toString()).delete();
+            
+            let localFees = JSON.parse(localStorage.getItem(getStorageKey('fees')) || '[]');
+            localFees = localFees.filter(f => f.id != id);
+            localStorage.setItem(getStorageKey('fees'), JSON.stringify(localFees));
+        } catch (error) {
+            console.error('Error deleting fee:', error);
+            throw error;
+        }
+    }
+
+    async function saveData() {
         let paid = 0;
         let detailsArr = [];
         
-        if(document.getElementById('checkM').checked) { let val = parseFloat(document.getElementById('valM').value)||0; paid += val; detailsArr.push("মাসিক:" + val); }
-        if(document.getElementById('checkS').checked) { let val = parseFloat(document.getElementById('valS').value)||0; paid += val; detailsArr.push("সেশন:" + val); }
-        if(document.getElementById('checkE').checked) { let val = parseFloat(document.getElementById('valE').value)||0; paid += val; detailsArr.push("পরীক্ষা:" + val); }
-        if(document.getElementById('checkO').checked) { let val = parseFloat(document.getElementById('valO').value)||0; paid += val; detailsArr.push("অন্যান্য:" + val); }
+        if(document.getElementById('checkM').checked) { 
+            let val = parseFloat(document.getElementById('valM').value)||0; 
+            paid += val; 
+            detailsArr.push("মাসিক:" + val); 
+        }
+        if(document.getElementById('checkS').checked) { 
+            let val = parseFloat(document.getElementById('valS').value)||0; 
+            paid += val; 
+            detailsArr.push("সেশন:" + val); 
+        }
+        if(document.getElementById('checkE').checked) { 
+            let val = parseFloat(document.getElementById('valE').value)||0; 
+            paid += val; 
+            detailsArr.push("পরীক্ষা:" + val); 
+        }
+        if(document.getElementById('checkO').checked) { 
+            let val = parseFloat(document.getElementById('valO').value)||0; 
+            paid += val; 
+            detailsArr.push("অন্যান্য:" + val); 
+        }
 
-        let history = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-        
         let entryData = {
             id: currentEditId || Date.now(),
             date: document.getElementById('entryDate').value || new Date().toISOString().split('T')[0],
             session: document.getElementById('sessionInput').value,
             student: document.getElementById('studentNameDisplay').innerText,
             class: document.getElementById('classSelect').value,
-            roll: document.getElementById('rollInput').value,
+            roll: parseInt(document.getElementById('rollInput').value) || 0,
             section: document.getElementById('sectionSelect').value,
             group: document.getElementById('groupSelect').value,
             months: finalMonthsList.join(", "),
             paid, 
             due: parseFloat(document.getElementById('valDue').value) || 0,
-            details: detailsArr.length > 0 ? detailsArr.join(", ") : "নগদ গ্রহণ"
+            details: detailsArr.length > 0 ? detailsArr.join(", ") : "নগদ গ্রহণ",
+            schoolId: SCHOOL_ID,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        if (currentEditId) {
-            let index = history.findIndex(i => i.id === currentEditId);
-            if (index !== -1) history[index] = entryData;
-            currentEditId = null;
-            document.getElementById('saveBtn').innerText = "সেভ করুন";
-            document.getElementById('saveBtn').style.background = "#2e7d32";
-            alert("ফি রেকর্ড আপডেট হয়েছে!");
-        } else {
-            history.push(entryData);
-            alert("ফি রেকর্ড সেভ হয়েছে!");
+        try {
+            const feeId = await saveFeeRecord(entryData);
+            
+            await saveIERecord({
+                refId: feeId,
+                date: entryData.date,
+                type: "Income",
+                category: "ফি আদায়",
+                amount: entryData.paid,
+                description: `${entryData.student} - ${entryData.months}`,
+                schoolId: SCHOOL_ID
+            });
+
+            if (currentEditId) {
+                alert("✅ ফি রেকর্ড আপডেট হয়েছে!");
+            } else {
+                alert("✅ ফি রেকর্ড সেভ হয়েছে!");
+            }
+
+            clearForm();
+            updateTable();
+            calculateTotals();
+            
+        } catch (error) {
+            alert("❌ সেভ করতে সমস্যা: " + error.message);
         }
-
-        localStorage.setItem(DB_NAME, JSON.stringify(history));
-        
-        syncToAccounts(entryData);
-
-        clearForm();
-        updateTable();
-        calculateTotals(); 
-    }
-
-    function syncToAccounts(feeEntry) {
-        let ieHistory = JSON.parse(localStorage.getItem(IE_DB)) || [];
-        let existingIndex = ieHistory.findIndex(item => item.refId === feeEntry.id);
-        let ieEntry = {
-            id: existingIndex !== -1 ? ieHistory[existingIndex].id : Date.now(),
-            refId: feeEntry.id, 
-            date: feeEntry.date,
-            type: "Income",
-            category: "ফি আদায়",
-            amount: feeEntry.paid,
-            description: `${feeEntry.student} - ${feeEntry.months}`
-        };
-
-        if (existingIndex !== -1) {
-            ieHistory[existingIndex] = ieEntry; 
-        } else {
-            ieHistory.push(ieEntry); 
-        }
-        localStorage.setItem(IE_DB, JSON.stringify(ieHistory));
     }
 
     function clearForm() {
         document.getElementById('rollInput').value = '';
         document.getElementById('studentNameDisplay').innerText = 'রোল ও শ্রেণি দিন...';
-        document.getElementById('valM').value = ''; document.getElementById('checkM').checked = false;
-        document.getElementById('valS').value = ''; document.getElementById('checkS').checked = false;
-        document.getElementById('valE').value = ''; document.getElementById('checkE').checked = false;
-        document.getElementById('valO').value = ''; document.getElementById('checkO').checked = false;
+        document.getElementById('valM').value = ''; 
+        document.getElementById('checkM').checked = false;
+        document.getElementById('valS').value = ''; 
+        document.getElementById('checkS').checked = false;
+        document.getElementById('valE').value = ''; 
+        document.getElementById('checkE').checked = false;
+        document.getElementById('valO').value = ''; 
+        document.getElementById('checkO').checked = false;
         document.getElementById('valDue').value = '';
         finalMonthsList = [];
         document.getElementById('addedMonthsDisplay').innerText = "কিছু না";
+        currentEditId = null;
+        document.getElementById('saveBtn').innerText = "💰 ফি সেভ করুন";
     }
 
-    function editItem(id) {
-        let history = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-        let item = history.find(i => i.id === id);
+    async function updateTable() {
+        const history = await loadFeeHistory();
+        let kIndi = document.getElementById('searchIndi').value.toUpperCase();
+        let kCls = document.getElementById('searchCls').value;
+        let kGrp = document.getElementById('searchGroup').value;
+        let kSes = document.getElementById('searchSes').value;
+        let sDate = document.getElementById('searchSDate').value, 
+            eDate = document.getElementById('searchEDate').value;
+
+        let tableBody = document.getElementById('tableBody');
+        let tPaid = 0, tDue = 0; 
+        tableBody.innerHTML = "";
+
+        history.forEach(item => {
+            const studentText = (item.student || '').toUpperCase();
+            const matchesSearch = studentText.includes(kIndi) || 
+                                 (item.roll && item.roll.toString().includes(kIndi));
+            const matchesClass = !kCls || item.class === kCls;
+            const matchesGroup = !kGrp || item.group === kGrp;
+            const matchesSession = !kSes || (item.session && item.session.includes(kSes));
+            const matchesDate = (!sDate || !eDate) || (item.date >= sDate && item.date <= eDate);
+
+            if(matchesSearch && matchesClass && matchesGroup && matchesSession && matchesDate) {
+                tPaid += item.paid; 
+                tDue += item.due;
+                tableBody.innerHTML += `<tr>
+                    <td>${formatDate(item.date)}</td>
+                    <td>${item.student}</td>
+                    <td>${item.class}</td>
+                    <td>${item.group}</td> 
+                    <td>${item.months}</td>
+                    <td>${item.details}</td>
+                    <td>৳${item.paid}</td>
+                    <td>৳${item.due}</td>
+                    <td class="no-print">
+                        <button onclick="editItem('${item.id}')" class="btn btn-edit" style="padding:5px 10px;">✎ এডিট</button>
+                        <button onclick="printReceipt('${item.id}')" class="btn btn-print" style="padding:5px 10px;">🖨️ রিসিট</button> 
+                        <button onclick="deleteItem('${item.id}')" class="btn btn-delete" style="padding:5px 10px;">✕</button>
+                    </td>
+                </tr>`;
+            }
+        });
+        document.getElementById('grandTotal').innerText = '৳' + tPaid;
+        document.getElementById('grandDue').innerText = '৳' + tDue;
+    }
+
+    async function editItem(id) {
+        let history = await loadFeeHistory();
+        let item = history.find(i => i.id == id);
         
         if (item) {
             currentEditId = id;
@@ -576,144 +1415,175 @@
             document.getElementById('sectionSelect').value = item.section;
             document.getElementById('groupSelect').value = item.group;
             
-            finalMonthsList = item.months.split(', ').filter(m => m.trim() !== '');
+            finalMonthsList = item.months ? item.months.split(', ').filter(m => m.trim() !== '') : [];
             document.getElementById('addedMonthsDisplay').innerText = item.months;
             
-            document.getElementById('checkM').checked = false; document.getElementById('valM').value = '';
-            document.getElementById('checkS').checked = false; document.getElementById('valS').value = '';
-            document.getElementById('checkE').checked = false; document.getElementById('valE').value = '';
-            document.getElementById('checkO').checked = false; document.getElementById('valO').value = '';
+            document.getElementById('checkM').checked = false; 
+            document.getElementById('valM').value = '';
+            document.getElementById('checkS').checked = false; 
+            document.getElementById('valS').value = '';
+            document.getElementById('checkE').checked = false; 
+            document.getElementById('valE').value = '';
+            document.getElementById('checkO').checked = false; 
+            document.getElementById('valO').value = '';
             
             if(item.details) {
                 let parts = item.details.split(', ');
                 parts.forEach(p => {
-                    if(p.includes("মাসিক:")) { document.getElementById('checkM').checked = true; document.getElementById('valM').value = p.split(':')[1]; }
-                    if(p.includes("সেশন:")) { document.getElementById('checkS').checked = true; document.getElementById('valS').value = p.split(':')[1]; }
-                    if(p.includes("পরীক্ষা:")) { document.getElementById('checkE').checked = true; document.getElementById('valE').value = p.split(':')[1]; }
-                    if(p.includes("অন্যান্য:")) { document.getElementById('checkO').checked = true; document.getElementById('valO').value = p.split(':')[1]; }
+                    if(p.includes("মাসিক:")) { 
+                        document.getElementById('checkM').checked = true; 
+                        document.getElementById('valM').value = p.split(':')[1]; 
+                    }
+                    if(p.includes("সেশন:")) { 
+                        document.getElementById('checkS').checked = true; 
+                        document.getElementById('valS').value = p.split(':')[1]; 
+                    }
+                    if(p.includes("পরীক্ষা:")) { 
+                        document.getElementById('checkE').checked = true; 
+                        document.getElementById('valE').value = p.split(':')[1]; 
+                    }
+                    if(p.includes("অন্যান্য:")) { 
+                        document.getElementById('checkO').checked = true; 
+                        document.getElementById('valO').value = p.split(':')[1]; 
+                    }
                 });
             }
             
             document.getElementById('valDue').value = item.due;
-            document.getElementById('saveBtn').innerText = "আপডেট করুন";
-            document.getElementById('saveBtn').style.background = "#ff9800";
-            window.scrollTo(0, 0);
+            document.getElementById('saveBtn').innerText = "🔄 আপডেট করুন";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
-    function deleteItem(id) {
-        if(confirm("আপনি কি নিশ্চিত?")) {
-            let h = JSON.parse(localStorage.getItem(DB_NAME));
-            localStorage.setItem(DB_NAME, JSON.stringify(h.filter(i => i.id !== id)));
-            
-            let ie = JSON.parse(localStorage.getItem(IE_DB)) || [];
-            ie = ie.filter(item => item.refId !== id);
-            localStorage.setItem(IE_DB, JSON.stringify(ie));
-            
-            updateTable();
-            calculateTotals();
-        }
-    }
-    
-    function updateTable() {
-        let history = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-        let kIndi = document.getElementById('searchIndi').value.toUpperCase();
-        let kCls = document.getElementById('searchCls').value;
-        let kGrp = document.getElementById('searchGroup').value;
-        let kSes = document.getElementById('searchSes').value;
-        let sDate = document.getElementById('searchSDate').value, eDate = document.getElementById('searchEDate').value;
-
-        let tableBody = document.getElementById('tableBody');
-        let tPaid = 0, tDue = 0; tableBody.innerHTML = "";
-
-        history.slice().reverse().forEach(item => {
-            const matchesSearch = item.student.toUpperCase().includes(kIndi);
-            const matchesClass = !kCls || item.class === kCls;
-            const matchesGroup = !kGrp || item.group === kGrp;
-            const matchesSession = !kSes || (item.session && item.session.includes(kSes));
-            const matchesDate = (!sDate || !eDate) || (item.date >= sDate && item.date <= eDate);
-
-            if(matchesSearch && matchesClass && matchesGroup && matchesSession && matchesDate) {
-                tPaid += item.paid; tDue += item.due;
-                tableBody.innerHTML += `<tr>
-                    <td>${formatDate(item.date)}</td>
-                    <td>${item.student}</td>
-                    <td>${item.class}</td>
-                    <td>${item.group}</td> <td>${item.months}</td>
-                    <td>${item.details}</td>
-                    <td>${item.paid}</td>
-                    <td>${item.due}</td>
-                    <td class="no-print">
-                        <button onclick="editItem(${item.id})" style="background:#ff9800; color:white; border:none; padding:3px 8px; cursor:pointer;">এডিট</button>
-                        <button onclick="printReceipt(${item.id})" style="background:#0288d1; color:white; border:none; padding:3px 8px; cursor:pointer;">রিসিট</button> 
-                        <button onclick="deleteItem(${item.id})" style="background:red; color:white; border:none; padding:3px 8px; cursor:pointer;">X</button>
-                    </td>
-                </tr>`;
+    async function deleteItem(id) {
+        if(confirm("আপনি কি এই রেকর্ড মুছতে চান?")) {
+            try {
+                await deleteFeeRecord(id);
+                
+                let ieHistory = await loadIEHistory();
+                const ieItem = ieHistory.find(item => item.refId == id);
+                if (ieItem) {
+                    await deleteIERecord(ieItem.id);
+                }
+                
+                updateTable();
+                calculateTotals();
+                alert("✅ রেকর্ড মুছে ফেলা হয়েছে");
+            } catch (error) {
+                alert("❌ মুছতে সমস্যা: " + error.message);
             }
-        });
-        document.getElementById('grandTotal').innerText = tPaid;
-        document.getElementById('grandDue').innerText = tDue;
+        }
     }
 
-    // --- INCOME EXPENSE LOGIC ---
-
+    // ==================== INCOME/EXPENSE FUNCTIONS ====================
     function updateIECategory() {
         const type = document.getElementById('ieType').value;
         const catSelect = document.getElementById('ieCategory');
         catSelect.innerHTML = "";
+        
         if (type === 'Income') {
-            catSelect.innerHTML = `<option value="ফি আদায় (স্বয়ংক্রিয়)">ফি আদায় (স্বয়ংক্রিয়)</option>
-                                   <option value="দান/অনুদান">দান/অনুদান</option>
-                                   <option value="অন্যান্য আয়">অন্যান্য আয়</option>`;
+            const options = ['ফি আদায়', 'দান/অনুদান', 'সরকারি অনুদান', 'ভর্তি ফি', 'অন্যান্য আয়'];
+            options.forEach(opt => {
+                catSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+            });
         } else {
-            catSelect.innerHTML = `<option value="শিক্ষক বেতন">শিক্ষক বেতন</option>
-                                   <option value="বিদ্যুৎ বিল">বিদ্যুৎ বিল</option>
-                                   <option value="পানি/গ্যাস বিল">পানি/গ্যাস বিল</option>
-                                   <option value="অফিস খরচ">অফিস খরচ</option>
-                                   <option value="মেরামত">মেরামত</option>
-                                   <option value="অন্যান্য খরচ">অন্যান্য খরচ</option>`;
+            const options = ['শিক্ষক বেতন', 'স্টাফ বেতন', 'বিদ্যুৎ বিল', 'পানি বিল', 'ইন্টারনেট বিল', 'অফিস খরচ', 'মেরামত', 'পরিবহন', 'অন্যান্য খরচ'];
+            options.forEach(opt => {
+                catSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+            });
         }
     }
 
-    function saveIEData() {
+    async function loadIEHistory() {
+        try {
+            const snapshot = await getCollection('accounts')
+                .orderBy('date', 'desc')
+                .get();
+            
+            const history = [];
+            snapshot.forEach(doc => {
+                history.push({ id: doc.id, ...doc.data() });
+            });
+            return history;
+        } catch (error) {
+            console.error('Error loading IE:', error);
+            const localIE = localStorage.getItem(getStorageKey('accounts'));
+            return localIE ? JSON.parse(localIE) : [];
+        }
+    }
+
+    async function saveIERecord(entryData) {
+        try {
+            const collectionRef = getCollection('accounts');
+            
+            if (!entryData.id) {
+                entryData.id = Date.now();
+            }
+            
+            await collectionRef.doc(entryData.id.toString()).set(entryData);
+            
+            let localIE = JSON.parse(localStorage.getItem(getStorageKey('accounts')) || '[]');
+            localIE = localIE.filter(a => a.id !== entryData.id);
+            localIE.push(entryData);
+            localStorage.setItem(getStorageKey('accounts'), JSON.stringify(localIE));
+            
+            return entryData.id;
+        } catch (error) {
+            console.error('Error saving IE:', error);
+            throw error;
+        }
+    }
+
+    async function deleteIERecord(id) {
+        try {
+            await getCollection('accounts').doc(id.toString()).delete();
+            
+            let localIE = JSON.parse(localStorage.getItem(getStorageKey('accounts')) || '[]');
+            localIE = localIE.filter(a => a.id != id);
+            localStorage.setItem(getStorageKey('accounts'), JSON.stringify(localIE));
+        } catch (error) {
+            console.error('Error deleting IE:', error);
+            throw error;
+        }
+    }
+
+    async function saveIEData() {
         const date = document.getElementById('ieDate').value || new Date().toISOString().split('T')[0];
         const type = document.getElementById('ieType').value;
         const category = document.getElementById('ieCategory').value;
         const amount = parseFloat(document.getElementById('ieAmount').value) || 0;
         const desc = document.getElementById('ieDesc').value;
 
-        if(amount <= 0) { alert("সঠিক পরিমাণ দিন"); return; }
+        if(amount <= 0) { 
+            alert("সঠিক পরিমাণ দিন"); 
+            return; 
+        }
 
-        let ieHistory = JSON.parse(localStorage.getItem(IE_DB)) || [];
-        ieHistory.push({
+        const entryData = {
             id: Date.now(),
             date,
             type,
             category,
             amount,
-            description: desc,
-            refId: null 
-        });
+            description: desc || (type === 'Income' ? 'আয়' : 'খরচ'),
+            schoolId: SCHOOL_ID,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
 
-        localStorage.setItem(IE_DB, JSON.stringify(ieHistory));
-        document.getElementById('ieAmount').value = "";
-        document.getElementById('ieDesc').value = "";
-        updateIETable();
-        calculateTotals();
-    }
-
-    function deleteIEItem(id) {
-        if(confirm("এই হিসাবটি মুছবেন?")) {
-            let ie = JSON.parse(localStorage.getItem(IE_DB)) || [];
-            ie = ie.filter(i => i.id !== id);
-            localStorage.setItem(IE_DB, JSON.stringify(ie));
+        try {
+            await saveIERecord(entryData);
+            document.getElementById('ieAmount').value = "";
+            document.getElementById('ieDesc').value = "";
             updateIETable();
             calculateTotals();
+            alert("✅ লেনদেন সেভ হয়েছে");
+        } catch (error) {
+            alert("❌ সেভ করতে সমস্যা: " + error.message);
         }
     }
 
-    function updateIETable() {
-        let ieHistory = JSON.parse(localStorage.getItem(IE_DB)) || [];
+    async function updateIETable() {
+        let ieHistory = await loadIEHistory();
         let sDate = document.getElementById('ieSearchSDate').value;
         let eDate = document.getElementById('ieSearchEDate').value;
         let sType = document.getElementById('ieSearchType').value;
@@ -721,45 +1591,148 @@
         let tbody = document.getElementById('ieTableBody');
         tbody.innerHTML = "";
 
-        ieHistory.slice().reverse().forEach(item => {
+        ieHistory.forEach(item => {
             const matchesDate = (!sDate || !eDate) || (item.date >= sDate && item.date <= eDate);
             const matchesType = !sType || item.type === sType;
 
             if(matchesDate && matchesType) {
-                const color = item.type === 'Income' ? 'green' : 'red';
+                const color = item.type === 'Income' ? '#2e7d32' : '#c62828';
+                const sign = item.type === 'Income' ? '+' : '-';
                 tbody.innerHTML += `<tr>
                     <td>${formatDate(item.date)}</td>
-                    <td style="color:${color}; font-weight:bold">${item.type}</td>
+                    <td style="color:${color}; font-weight:bold">${item.type === 'Income' ? 'আয়' : 'খরচ'}</td>
                     <td>${item.category}</td>
                     <td>${item.description}</td>
-                    <td style="color:${color}">${item.type === 'Income' ? '+' : '-'} ${item.amount}</td>
+                    <td style="color:${color}; font-weight:bold">${sign} ৳${item.amount}</td>
                     <td class="no-print">
-                        ${!item.refId ? `<button onclick="deleteIEItem(${item.id})" style="background:red; color:white; border:none; padding:3px 8px; cursor:pointer;">X</button>` : '<small>সিস্টেম</small>'}
+                        ${!item.refId ? 
+                            `<button onclick="deleteIEItem('${item.id}')" class="btn btn-delete" style="padding:5px 10px;">✕</button>` : 
+                            '<span style="color:#999; font-size:12px;">স্বয়ংক্রিয়</span>'}
                     </td>
                 </tr>`;
             }
         });
     }
 
-    function calculateTotals() {
-        let ieHistory = JSON.parse(localStorage.getItem(IE_DB)) || [];
+    async function deleteIEItem(id) {
+        if(confirm("এই লেনদেন মুছবেন?")) {
+            try {
+                await deleteIERecord(id);
+                updateIETable();
+                calculateTotals();
+            } catch (error) {
+                alert("❌ মুছতে সমস্যা: " + error.message);
+            }
+        }
+    }
+
+    async function calculateTotals() {
+        let ieHistory = await loadIEHistory();
         let totalIn = 0, totalEx = 0;
+        
         ieHistory.forEach(item => {
             if(item.type === 'Income') totalIn += item.amount;
             else totalEx += item.amount;
         });
-        document.getElementById('totalIncomeDisplay').innerText = "৳" + totalIn;
-        document.getElementById('totalExpenseDisplay').innerText = "৳" + totalEx;
-        document.getElementById('totalBalanceDisplay').innerText = "৳" + (totalIn - totalEx);
+        
+        document.getElementById('totalIncomeDisplay').innerText = '৳' + totalIn;
+        document.getElementById('totalExpenseDisplay').innerText = '৳' + totalEx;
+        document.getElementById('totalBalanceDisplay').innerText = '৳' + (totalIn - totalEx);
     }
 
-    // --- Print & Backup ---
-    
-    // REVERTED: Previous Compact Receipt Design
-    function printReceipt(id) {
-        let history = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-        let item = history.find(i => i.id === id);
-        let config = JSON.parse(localStorage.getItem('appConfig'));
+    // ==================== HELPER FUNCTIONS ====================
+    function formatDate(dateStr) {
+        if (!dateStr) return "";
+        const parts = dateStr.split('-');
+        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        return dateStr;
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if(tabId === 'feeTab') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        } else {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            updateIETable();
+            calculateTotals();
+        }
+    }
+
+    function getStorageKey(key) {
+        return `${key}_${SCHOOL_ID}`;
+    }
+
+    // ==================== SETTINGS FUNCTIONS ====================
+    function loadSettings() {
+        const config = JSON.parse(localStorage.getItem(getStorageKey('appConfig'))) || 
+                      { name: "আমার স্কুল", addr: "ঠিকানা", mob: "মোবাইল", pass: "1234", logo: "" };
+        
+        document.getElementById('headerName').innerText = config.name;
+        document.getElementById('headerAddress').innerText = config.addr + " | " + config.mob;
+        document.getElementById('schoolIdDisplay').innerText = SCHOOL_ID;
+        
+        if(config.logo) { 
+            document.getElementById('schoolLogoImg').src = config.logo; 
+            document.getElementById('schoolLogoImg').style.display = "block"; 
+        }
+        
+        document.getElementById('setSchoolName').value = config.name;
+        document.getElementById('setSchoolAddr').value = config.addr;
+        document.getElementById('setSchoolMob').value = config.mob;
+    }
+
+    function previewLogo(input) {
+        if (input.files && input.files[0]) {
+            let reader = new FileReader();
+            reader.onload = (e) => { tempLogoBase64 = e.target.result; };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function openSettings() {
+        const config = JSON.parse(localStorage.getItem(getStorageKey('appConfig'))) || { pass: "1234" };
+        let pass = prompt("পাসওয়ার্ড দিন:");
+        if(pass === config.pass) {
+            document.getElementById('settingsArea').style.display = "block";
+        } else {
+            alert("❌ ভুল পাসওয়ার্ড!");
+        }
+    }
+
+    function saveSettings() {
+        const current = JSON.parse(localStorage.getItem(getStorageKey('appConfig'))) || { pass: "1234" };
+        
+        const config = {
+            name: document.getElementById('setSchoolName').value || current.name || "আমার স্কুল",
+            addr: document.getElementById('setSchoolAddr').value || current.addr || "ঠিকানা",
+            mob: document.getElementById('setSchoolMob').value || current.mob || "মোবাইল",
+            pass: document.getElementById('setNewPass').value || current.pass,
+            logo: tempLogoBase64 || current.logo || ""
+        };
+        
+        localStorage.setItem(getStorageKey('appConfig'), JSON.stringify(config));
+        alert("✅ সেটিংস সেভ হয়েছে!");
+        location.reload();
+    }
+
+    function switchSchool() {
+        const newSchoolId = prompt('নতুন স্কুল আইডি দিন (যেমন: school1, college2, etc.):');
+        if (newSchoolId) {
+            const url = new URL(window.location);
+            url.searchParams.set('id', newSchoolId);
+            window.location.href = url;
+        }
+    }
+
+    // ==================== PRINT FUNCTIONS ====================
+    async function printReceipt(id) {
+        let history = await loadFeeHistory();
+        let item = history.find(i => i.id == id);
+        let config = JSON.parse(localStorage.getItem(getStorageKey('appConfig'))) || 
+                    { name: "আমার স্কুল", addr: "ঠিকানা", mob: "মোবাইল" };
         
         let win = window.open('', '', 'height=750,width=850');
         win.document.write(`
@@ -767,92 +1740,313 @@
             <head>
                 <style>
                     @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
-                    body { font-family: 'Hind Siliguri', sans-serif; padding: 20px; display: flex; justify-content: center; }
-                    .receipt-border { border: 6px double #1a73e8; padding: 30px; width: 620px; background: #fff; box-sizing: border-box; }
-                    .h-box { text-align: center; border-bottom: 2px solid #1a73e8; padding-bottom: 12px; margin-bottom: 18px; }
-                    .h-box img { width: 75px; height: 75px; margin-bottom: 8px; }
-                    .h-box h1 { margin: 0; color: #1a73e8; font-size: 34px; font-weight: 700; }
-                    .h-box p { margin: 4px 0; font-size: 16px; color: #333; font-weight: 600; }
-                    .title-tag { text-align: center; background: #1a73e8 !important; color: white !important; padding: 10px; font-weight: bold; margin-bottom: 20px; border-radius: 6px; font-size: 22px; -webkit-print-color-adjust: exact; }
-                    .info-row { display: flex; justify-content: space-between; border-bottom: 1.5px dotted #999; padding: 12px 0; font-size: 19px; color: #000; }
+                    body { font-family: 'Hind Siliguri', sans-serif; padding: 20px; display: flex; justify-content: center; background: #f5f5f5; }
+                    .receipt-border { 
+                        border: 8px double #1a73e8; 
+                        padding: 30px; 
+                        width: 620px; 
+                        background: #fff; 
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                    }
+                    .h-box { 
+                        text-align: center; 
+                        border-bottom: 3px solid #1a73e8; 
+                        padding-bottom: 15px; 
+                        margin-bottom: 20px; 
+                    }
+                    .h-box img { 
+                        width: 80px; 
+                        height: 80px; 
+                        margin-bottom: 10px;
+                        border-radius: 50%;
+                        border: 2px solid #1a73e8;
+                    }
+                    .h-box h1 { 
+                        margin: 0; 
+                        color: #1a73e8; 
+                        font-size: 36px; 
+                        font-weight: 700; 
+                    }
+                    .h-box p { 
+                        margin: 5px 0; 
+                        font-size: 16px; 
+                        color: #666; 
+                    }
+                    .title-tag { 
+                        text-align: center; 
+                        background: #1a73e8; 
+                        color: white; 
+                        padding: 12px; 
+                        font-weight: bold; 
+                        margin-bottom: 25px; 
+                        border-radius: 50px; 
+                        font-size: 24px; 
+                        letter-spacing: 1px;
+                    }
+                    .info-row { 
+                        display: flex; 
+                        justify-content: space-between; 
+                        border-bottom: 2px dotted #999; 
+                        padding: 12px 0; 
+                        font-size: 18px; 
+                    }
                     .info-row b { color: #1a73e8; }
-                    .details-box { margin-top: 15px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; min-height: 50px; font-size: 18px; background: #fafafa; color: #333; line-height: 1.5; }
-                    .amount-section { background: #f0f7ff !important; padding: 20px; border: 2.5px solid #1a73e8; display: flex; justify-content: space-between; -webkit-print-color-adjust: exact; margin-top: 25px; border-radius: 8px; font-size: 24px; }
-                    .footer { margin-top: 70px; display: flex; justify-content: space-between; }
-                    .sig { width: 190px; border-top: 2px solid #333; text-align: center; font-size: 16px; padding-top: 10px; font-weight: 700; }
+                    .details-box { 
+                        margin-top: 20px; 
+                        padding: 20px; 
+                        border: 2px solid #e0e0e0; 
+                        border-radius: 10px; 
+                        background: #fafafa; 
+                        font-size: 18px; 
+                        line-height: 1.6;
+                    }
+                    .amount-section { 
+                        background: #e8f0fe; 
+                        padding: 25px; 
+                        border: 3px solid #1a73e8; 
+                        display: flex; 
+                        justify-content: space-between; 
+                        margin-top: 25px; 
+                        border-radius: 15px; 
+                        font-size: 24px; 
+                        font-weight: bold;
+                    }
+                    .footer { 
+                        margin-top: 50px; 
+                        display: flex; 
+                        justify-content: space-between; 
+                    }
+                    .sig { 
+                        width: 200px; 
+                        border-top: 2px solid #333; 
+                        text-align: center; 
+                        font-size: 16px; 
+                        padding-top: 10px; 
+                    }
+                    .watermark {
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        opacity: 0.1;
+                        font-size: 60px;
+                        transform: rotate(-15deg);
+                        color: #1a73e8;
+                        pointer-events: none;
+                    }
                 </style>
             </head>
             <body>
                 <div class="receipt-border">
+                    <div class="watermark">${config.name}</div>
                     <div class="h-box">
                         ${config.logo ? `<img src="${config.logo}">` : ''}
                         <h1>${config.name}</h1>
-                        <p>${config.addr} | মোবাইল: ${config.mob}</p>
+                        <p>${config.addr} | 📞 ${config.mob}</p>
                     </div>
-                    <div class="title-tag">মানি রিসিট (শিক্ষার্থী কপি)</div>
-                    <div class="info-row"><span>নাম: <b>${item.student}</b></span><span>তারিখ: <b>${formatDate(item.date)}</b></span></div>
-                    <div class="info-row"><span>শ্রেণি: <b>${item.class}</b> | শাখা: <b>${item.section}</b></span><span>ID: #${item.id.toString().slice(-6)}</span></div>
-                    <div class="info-row"><span>বিভাগ: <b>${item.group}</b> | সেশন: <b>${item.session || 'N/A'}</b></span></div>
-                    <div class="info-row"><span>পরিশোধিত মাস: <b>${item.months}</b></span></div>
-                    <div style="margin-top:15px; font-weight:bold; font-size:18px; color:#555;">আদায়ের বিবরণ:</div>
+                    <div class="title-tag">🧾 টাকা গ্রহণের রসিদ</div>
+                    <div class="info-row">
+                        <span>👤 নাম: <b>${item.student}</b></span>
+                        <span>📅 তারিখ: <b>${formatDate(item.date)}</b></span>
+                    </div>
+                    <div class="info-row">
+                        <span>📚 শ্রেণি: <b>${item.class}</b> | শাখা: <b>${item.section}</b></span>
+                        <span>🆔 রোল: <b>${item.roll}</b></span>
+                    </div>
+                    <div class="info-row">
+                        <span>🔬 বিভাগ: <b>${item.group}</b></span>
+                        <span>📅 সেশন: <b>${item.session || 'N/A'}</b></span>
+                    </div>
+                    <div class="info-row">
+                        <span>📆 পরিশোধিত মাস: <b>${item.months}</b></span>
+                    </div>
+                    <div style="margin-top:20px; font-weight:bold; font-size:18px;">আদায়ের বিবরণ:</div>
                     <div class="details-box">${item.details}</div>
                     <div class="amount-section">
-                        <b>মোট আদায়: ৳ ${item.paid}/-</b>
-                        <b style="color:#d32f2f">বকেয়া: ৳ ${item.due}/-</b>
+                        <span>💵 মোট আদায়: ৳ ${item.paid}/-</span>
+                        <span style="color:#d32f2f">⚠️ বকেয়া: ৳ ${item.due}/-</span>
                     </div>
                     <div class="footer">
-                        <div class="sig">অভিভাবক/শিক্ষার্থীর স্বাক্ষর</div>
-                        <div class="sig">কর্তৃপক্ষের স্বাক্ষর</div>
+                        <div class="sig">অভিভাবকের স্বাক্ষর</div>
+                        <div class="sig">প্রধান শিক্ষকের স্বাক্ষর</div>
                     </div>
                 </div>
             </body>
             </html>
         `);
         win.document.close();
-        setTimeout(() => { win.print(); win.close(); }, 500);
+        setTimeout(() => { 
+            win.print(); 
+            win.close(); 
+        }, 500);
     }
-    
-    function printFullReport() {
-        const config = JSON.parse(localStorage.getItem('appConfig'));
-        const tableClone = document.getElementById('feeTable').cloneNode(true);
-        tableClone.querySelectorAll('.no-print').forEach(el => el.remove());
+
+    async function printFullReport() {
+        const config = JSON.parse(localStorage.getItem(getStorageKey('appConfig'))) || 
+                      { name: "আমার স্কুল", addr: "ঠিকানা" };
+        const history = await loadFeeHistory();
+        
+        let tableHtml = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>তারিখ</th>
+                        <th>নাম ও রোল</th>
+                        <th>শ্রেণি</th>
+                        <th>মাস</th>
+                        <th>বিবরণ</th>
+                        <th>আদায়</th>
+                        <th>বকেয়া</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        let totalPaid = 0, totalDue = 0;
+        
+        history.forEach(item => {
+            totalPaid += item.paid;
+            totalDue += item.due;
+            tableHtml += `
+                <tr>
+                    <td>${formatDate(item.date)}</td>
+                    <td>${item.student}</td>
+                    <td>${item.class}</td>
+                    <td>${item.months}</td>
+                    <td>${item.details}</td>
+                    <td>৳${item.paid}</td>
+                    <td>৳${item.due}</td>
+                </tr>
+            `;
+        });
+        
+        tableHtml += `
+                </tbody>
+                <tfoot>
+                    <tr style="background:#263238; color:#ffeb3b; font-weight:bold;">
+                        <td colspan="5">সর্বমোট:</td>
+                        <td>৳${totalPaid}</td>
+                        <td>৳${totalDue}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        `;
+        
         let win = window.open('', '', 'height=800,width=1200');
-        win.document.write(`<html><head><style>body{font-family:sans-serif;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #000;padding:8px;text-align:center;}th{background:#1a73e8;color:white;}</style></head><body>
-            <h1 style="text-align:center">${config.name}</h1>
-            <h3 style="text-align:center">ফি আদায় রিপোর্ট</h3>
-            ${tableClone.outerHTML}
-        </body></html>`);
+        win.document.write(`
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; }
+                    h1 { text-align: center; color: #1a73e8; }
+                    h3 { text-align: center; color: #666; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+                    th { background: #1a73e8; color: white; }
+                </style>
+            </head>
+            <body>
+                <h1>${config.name}</h1>
+                <h3>${config.addr}</h3>
+                <h2 style="text-align:center;">সম্পূর্ণ ফি আদায় রিপোর্ট</h2>
+                ${tableHtml}
+            </body>
+            </html>
+        `);
         win.document.close();
-        setTimeout(() => { win.print(); win.close(); }, 500);
+        setTimeout(() => { win.print(); }, 500);
     }
 
-    function exportData() {
-        const data = { 
-            config: JSON.parse(localStorage.getItem('appConfig')), 
-            history: JSON.parse(localStorage.getItem(DB_NAME)),
-            students: JSON.parse(localStorage.getItem(STUDENT_DB)),
-            accounts: JSON.parse(localStorage.getItem(IE_DB))
-        };
-        const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Full_Backup.json'; a.click();
+    // ==================== BACKUP FUNCTIONS ====================
+    async function exportData() {
+        try {
+            const feeHistory = await loadFeeHistory();
+            const ieHistory = await loadIEHistory();
+            
+            const data = { 
+                config: JSON.parse(localStorage.getItem(getStorageKey('appConfig'))),
+                students: students,
+                fees: feeHistory,
+                accounts: ieHistory,
+                schoolId: SCHOOL_ID,
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Backup_${SCHOOL_ID}_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            
+            alert("✅ ব্যাকআপ ডাউনলোড হচ্ছে");
+        } catch (error) {
+            alert("❌ ব্যাকআপ নিতে সমস্যা: " + error.message);
+        }
     }
 
-    function importData(input) {
+    async function importData(input) {
         if (input.files && input.files[0]) {
             let reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     let data = JSON.parse(e.target.result);
-                    if(data.config) localStorage.setItem('appConfig', JSON.stringify(data.config));
-                    if(data.history) localStorage.setItem(DB_NAME, JSON.stringify(data.history));
-                    if(data.students) localStorage.setItem(STUDENT_DB, JSON.stringify(data.students));
-                    if(data.accounts) localStorage.setItem(IE_DB, JSON.stringify(data.accounts));
-                    alert("ইম্পোর্ট সফল!"); location.reload();
-                } catch(e) { alert("ফাইল সঠিক নয়"); }
+                    
+                    if(data.config) {
+                        localStorage.setItem(getStorageKey('appConfig'), JSON.stringify(data.config));
+                    }
+                    
+                    if(data.students && data.students.length > 0) {
+                        students = data.students;
+                        localStorage.setItem(getStorageKey('students'), JSON.stringify(students));
+                        await saveStudentListToFirebase().catch(e => console.log('Firebase save failed:', e));
+                    }
+                    
+                    if(data.fees && data.fees.length > 0) {
+                        localStorage.setItem(getStorageKey('fees'), JSON.stringify(data.fees));
+                        for (const fee of data.fees) {
+                            await saveFeeRecord(fee).catch(e => console.log('Firebase save failed:', e));
+                        }
+                    }
+                    
+                    if(data.accounts && data.accounts.length > 0) {
+                        localStorage.setItem(getStorageKey('accounts'), JSON.stringify(data.accounts));
+                        for (const acc of data.accounts) {
+                            await saveIERecord(acc).catch(e => console.log('Firebase save failed:', e));
+                        }
+                    }
+                    
+                    alert("✅ ইম্পোর্ট সফল হয়েছে!");
+                    location.reload();
+                    
+                } catch(e) {
+                    alert("❌ ফাইল সঠিক নয়: " + e.message);
+                }
             };
             reader.readAsText(input.files[0]);
         }
     }
+
+    // ==================== INITIALIZATION ====================
+    window.onload = async function() {
+        document.getElementById('schoolIdDisplay').innerText = SCHOOL_ID;
+        
+        const today = new Date().toISOString().split('T')[0];
+        if (document.getElementById('entryDate')) {
+            document.getElementById('entryDate').value = today;
+        }
+        if (document.getElementById('ieDate')) {
+            document.getElementById('ieDate').value = today;
+        }
+        
+        await loadStudentList();
+        loadSettings();
+        updateTable();
+        updateIETable(); 
+        calculateTotals(); 
+        updateIECategory();
+        
+        checkFirebaseConnection();
+        setInterval(checkFirebaseConnection, 30000);
+    };
 </script>
 </body>
 </html>
