@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>স্কুল ম্যানেজমেন্ট - ফি আদায় ও হিসাব খাতা (Firebase)</title>
+    <title>স্কুল ম্যানেজমেন্ট - ফি আদায় ও হিসাব খাতা</title>
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
@@ -146,6 +146,88 @@
             border-radius: 30px;
             display: inline-block;
             font-weight: 500;
+        }
+
+        /* নিরাপত্তা বার্তা - এখন লুকানো/দেখান যাবে */
+        .security-alert {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            border: 2px solid #fff;
+            box-shadow: 0 5px 15px rgba(255,152,0,0.3);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .security-alert.hidden {
+            display: none;
+        }
+
+        .security-alert h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+            padding-right: 40px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .show-instructions-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .show-instructions-btn:hover {
+            background: #0d47a1;
+            transform: translateY(-2px);
+        }
+
+        .code-box {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border: 1px solid #333;
+            max-height: 300px;
+            overflow: auto;
         }
 
         .tab-container { 
@@ -541,7 +623,7 @@
 <!-- Firebase Status Indicator - উপরে বাম কর্নারে -->
 <div id="firebaseStatus" class="firebase-status disconnected">
     <span class="loader"></span> 
-    <span id="statusText">ফায়ারবেস সংযোগ হচ্ছে...</span>
+    <span id="statusText">ফায়ারবেস কনফিগারেশন নেই</span>
 </div>
 
 <div class="container">
@@ -559,6 +641,82 @@
         <p id="headerAddress">অপেক্ষা করুন...</p>
         <div class="school-id-badge">
             <span>🏫</span> স্কুল আইডি: <span id="schoolIdDisplay">demo_school</span>
+        </div>
+    </div>
+
+    <!-- নির্দেশনা দেখানোর বোতাম (যখন নির্দেশনা লুকানো থাকে) -->
+    <div class="no-print" style="text-align: right; margin-bottom: 10px;">
+        <button id="showInstructionsBtn" onclick="showInstructions()" class="show-instructions-btn">
+            <span>📋</span> নির্দেশনা দেখান
+        </button>
+    </div>
+
+    <!-- 🔴 গুরুত্বপূর্ণ নিরাপত্তা বার্তা - এখন লুকানো/দেখান যাবে -->
+    <div id="securityAlert" class="security-alert no-print">
+        <button class="close-btn" onclick="hideInstructions()">✕</button>
+        <h3>⚠️ Firebase কনফিগারেশন সরানো হয়েছে</h3>
+        <p>এই GitHub রিপোজিটরি থেকে নিরাপত্তার জন্য Firebase কনফিগারেশন সরিয়ে ফেলা হয়েছে।</p>
+        <p><strong>নিচের নির্দেশনা অনুসরণ করে আপনার লোকাল প্রজেক্ট সেটআপ করুন:</strong></p>
+        
+        <div style="margin-top: 20px;">
+            <p style="font-weight: bold; color: #fff;">➡️ ধাপ ১: আপনার কম্পিউটারে config.js ফাইল তৈরি করুন:</p>
+            <div class="code-box">
+// config.js
+// ⚠️ এই ফাইল GitHub-এ আপলোড করবেন না! শুধু আপনার কম্পিউটারে রাখুন।
+
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// Firebase Initialize
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <p style="font-weight: bold; color: #fff;">➡️ ধাপ ২: Firebase থেকে আপনার আসল কনফিগারেশন নিয়ে config.js তে বসান:</p>
+            <div class="code-box">
+// আপনার Firebase Console থেকে নিচের তথ্য নিন:
+// Project Settings > General > Your apps > Firebase SDK snippet
+// সেখান থেকে apiKey, authDomain, projectId, ইত্যাদি কপি করুন
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <p style="font-weight: bold; color: #fff;">➡️ ধাপ ৩: ফাইল স্ট্রাকচার ঠিক করুন:</p>
+            <div class="code-box">
+fee-collection/
+├── index.html (এই ফাইল - GitHub-এ আছে)
+├── config.js (আপনার কম্পিউটারে তৈরি করুন - GitHub-এ দেবেন না)
+└── .gitignore (GitHub-এ config.js ইগনোর করতে)
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <p style="font-weight: bold; color: #fff;">➡️ ধাপ ৪: .gitignore ফাইল তৈরি করুন:</p>
+            <div class="code-box">
+# .gitignore
+config.js
+*.config.js
+.env
+*.key
+secrets/
+            </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin-top: 15px;">
+            <p style="color: #fff; font-weight: bold;">✅ সবকিছু ঠিক থাকলে:</p>
+            <ul style="margin-left: 20px; line-height: 1.8; color: #fff;">
+                <li>আপনার কম্পিউটারে অ্যাপ চলবে</li>
+                <li>Firebase সংযুক্ত হবে</li>
+                <li>GitHub-এ কোনো সিক্রেট থাকবে না</li>
+            </ul>
         </div>
     </div>
 
@@ -921,33 +1079,15 @@
 </div>
 
 <script>
-    // ==================== FIREBASE CONFIGURATION ====================
-    // আপনার দেওয়া নতুন Firebase Config
-    const firebaseConfig = {
-        apiKey: "AIzaSyBFZXThyU26W4FEOqrE83AyjKiKrsGOWWA",
-        authDomain: "fee-collection-b7963.firebaseapp.com",
-        projectId: "fee-collection-b7963",
-        storageBucket: "fee-collection-b7963.firebasestorage.app",
-        messagingSenderId: "884240243315",
-        appId: "1:884240243315:web:fe6daf34b9065f88c2e806",
-        measurementId: "G-1669910LWS"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    
-    // Enable offline persistence
-    db.enablePersistence()
-        .then(() => console.log('✅ Offline persistence enabled'))
-        .catch(err => console.log('Persistence error:', err));
-
     // ==================== GLOBAL VARIABLES ====================
     let students = [];
     let finalMonthsList = [];
     let tempLogoBase64 = "";
     let currentEditId = null;
     let editingStudentIndex = null;
+
+    // Firebase রেফারেন্স - config.js থেকে আসবে
+    let db = null;
 
     // Get School ID from URL
     function getSchoolId() {
@@ -964,10 +1104,16 @@
     }
 
     const SCHOOL_ID = getSchoolId();
-    
-    // Helper function for Firebase collections
-    function getCollection(collectionName) {
-        return db.collection('schools').doc(SCHOOL_ID).collection(collectionName);
+
+    // ==================== INSTRUCTION VISIBILITY ====================
+    function hideInstructions() {
+        document.getElementById('securityAlert').classList.add('hidden');
+        localStorage.setItem('instructionsHidden', 'true');
+    }
+
+    function showInstructions() {
+        document.getElementById('securityAlert').classList.remove('hidden');
+        localStorage.setItem('instructionsHidden', 'false');
     }
 
     // ==================== FIREBASE STATUS ====================
@@ -978,6 +1124,9 @@
         if (status === 'connected') {
             statusDiv.className = 'firebase-status connected';
             statusText.innerText = `✅ ${SCHOOL_ID} সংযুক্ত`;
+        } else if (status === 'no-config') {
+            statusDiv.className = 'firebase-status disconnected';
+            statusText.innerText = '⚠️ config.js খুঁজে পাওয়া যায়নি';
         } else {
             statusDiv.className = 'firebase-status disconnected';
             statusText.innerText = `❌ ${message || 'সংযোগ ব্যর্থ'}`;
@@ -985,14 +1134,14 @@
     }
 
     // Check Firebase Connection
-    async function checkFirebaseConnection() {
+    function checkFirebaseConnection() {
+        if (typeof firebase === 'undefined' || !firebase.apps || firebase.apps.length === 0) {
+            updateFirebaseStatus('no-config');
+            return false;
+        }
+        
         try {
-            const testRef = getCollection('_test_').doc('connection_test');
-            await testRef.set({ 
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                schoolId: SCHOOL_ID 
-            });
-            setTimeout(() => testRef.delete(), 1000);
+            db = firebase.firestore();
             updateFirebaseStatus('connected');
             return true;
         } catch (error) {
@@ -1002,70 +1151,33 @@
         }
     }
 
+    // Helper function for Firebase collections
+    function getCollection(collectionName) {
+        if (!db) return null;
+        return db.collection('schools').doc(SCHOOL_ID).collection(collectionName);
+    }
+
     // ==================== STUDENT MANAGEMENT ====================
-    async function loadStudentList() {
+    function loadStudentList() {
         try {
-            const isConnected = await checkFirebaseConnection();
-            
-            if (isConnected) {
-                const snapshot = await getCollection('students').get();
-                students = [];
-                snapshot.forEach(doc => {
-                    students.push({ id: doc.id, ...doc.data() });
-                });
-            }
-            
             const localStudents = localStorage.getItem(getStorageKey('students'));
             
-            if (students.length === 0) {
-                if (localStudents) {
-                    students = JSON.parse(localStudents);
-                } else {
-                    // Sample data
-                    students = [
-                        { name: "রহিম আহমেদ", class: "One", roll: 101, section: "A", group: "General", session: "২০২৪" },
-                        { name: "সাব্বির হোসেন", class: "One", roll: 102, section: "B", group: "General", session: "২০২৪" },
-                        { name: "করিম উল্লাহ", class: "Ten", roll: 101, section: "A", group: "Science", session: "২০২৪" }
-                    ];
-                }
+            if (localStudents) {
+                students = JSON.parse(localStudents);
+            } else {
+                // Sample data
+                students = [
+                    { name: "রহিম আহমেদ", class: "One", roll: 101, section: "A", group: "General", session: "২০২৪" },
+                    { name: "সাব্বির হোসেন", class: "One", roll: 102, section: "B", group: "General", session: "২০২৪" },
+                    { name: "করিম উল্লাহ", class: "Ten", roll: 101, section: "A", group: "Science", session: "২০২৪" }
+                ];
+                localStorage.setItem(getStorageKey('students'), JSON.stringify(students));
             }
             
             renderStudentPreview();
             
-            localStorage.setItem(getStorageKey('students'), JSON.stringify(students));
-            
-            if (isConnected) {
-                await saveStudentListToFirebase();
-            }
-            
         } catch (error) {
             console.error('Error loading students:', error);
-            const localStudents = localStorage.getItem(getStorageKey('students'));
-            if (localStudents) {
-                students = JSON.parse(localStudents);
-                renderStudentPreview();
-            }
-        }
-    }
-
-    async function saveStudentListToFirebase() {
-        try {
-            const batch = db.batch();
-            const collectionRef = getCollection('students');
-            
-            const snapshot = await collectionRef.get();
-            snapshot.forEach(doc => {
-                batch.delete(doc.ref);
-            });
-            
-            students.forEach(student => {
-                const docRef = collectionRef.doc();
-                batch.set(docRef, student);
-            });
-            
-            await batch.commit();
-        } catch (error) {
-            console.error('Error saving to Firebase:', error);
         }
     }
 
@@ -1117,7 +1229,11 @@
         }
         
         localStorage.setItem(getStorageKey('students'), JSON.stringify(students));
-        saveStudentListToFirebase().catch(e => console.log('Firebase save failed:', e));
+        
+        if (db) {
+            saveStudentListToFirebase().catch(e => console.log('Firebase save failed:', e));
+        }
+        
         renderStudentPreview();
         clearStudentForm();
     }
@@ -1148,7 +1264,9 @@
         if(confirm("শিক্ষার্থীকে মুছবেন?")) {
             students.splice(index, 1);
             localStorage.setItem(getStorageKey('students'), JSON.stringify(students));
-            saveStudentListToFirebase().catch(e => console.log('Firebase save failed:', e));
+            if (db) {
+                saveStudentListToFirebase().catch(e => console.log('Firebase save failed:', e));
+            }
             renderStudentPreview();
         }
     }
@@ -1179,11 +1297,35 @@
                 }
             }
             localStorage.setItem(getStorageKey('students'), JSON.stringify(students));
-            saveStudentListToFirebase().catch(e => console.log('Firebase save failed:', e));
+            if (db) {
+                saveStudentListToFirebase().catch(e => console.log('Firebase save failed:', e));
+            }
             renderStudentPreview();
             alert(`${count} জন নতুন শিক্ষার্থী যোগ হয়েছে`);
         };
         reader.readAsText(file);
+    }
+
+    async function saveStudentListToFirebase() {
+        if (!db) return;
+        try {
+            const batch = db.batch();
+            const collectionRef = getCollection('students');
+            
+            const snapshot = await collectionRef.get();
+            snapshot.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            
+            students.forEach(student => {
+                const docRef = collectionRef.doc();
+                batch.set(docRef, student);
+            });
+            
+            await batch.commit();
+        } catch (error) {
+            console.error('Error saving to Firebase:', error);
+        }
     }
 
     // ==================== FEE COLLECTION ====================
@@ -1213,39 +1355,32 @@
         document.getElementById('addedMonthsDisplay').innerText = finalMonthsList.join(", ");
     }
 
-    async function loadFeeHistory() {
+    function loadFeeHistory() {
         try {
-            const snapshot = await getCollection('fees')
-                .orderBy('date', 'desc')
-                .get();
-            
-            const history = [];
-            snapshot.forEach(doc => {
-                history.push({ id: doc.id, ...doc.data() });
-            });
-            return history;
-        } catch (error) {
-            console.error('Error loading fees:', error);
             const localFees = localStorage.getItem(getStorageKey('fees'));
             return localFees ? JSON.parse(localFees) : [];
+        } catch (error) {
+            console.error('Error loading fees:', error);
+            return [];
         }
     }
 
-    async function saveFeeRecord(entryData) {
+    function saveFeeRecord(entryData) {
         try {
-            const collectionRef = getCollection('fees');
+            let localFees = JSON.parse(localStorage.getItem(getStorageKey('fees')) || '[]');
             
             if (entryData.id) {
-                await collectionRef.doc(entryData.id.toString()).set(entryData);
+                localFees = localFees.filter(f => f.id !== entryData.id);
             } else {
                 entryData.id = Date.now();
-                await collectionRef.doc(entryData.id.toString()).set(entryData);
             }
             
-            let localFees = JSON.parse(localStorage.getItem(getStorageKey('fees')) || '[]');
-            localFees = localFees.filter(f => f.id !== entryData.id);
             localFees.push(entryData);
             localStorage.setItem(getStorageKey('fees'), JSON.stringify(localFees));
+            
+            if (db) {
+                saveFeeToFirebase(entryData).catch(e => console.log('Firebase save failed:', e));
+            }
             
             return entryData.id;
         } catch (error) {
@@ -1254,20 +1389,35 @@
         }
     }
 
-    async function deleteFeeRecord(id) {
+    async function saveFeeToFirebase(entryData) {
+        if (!db) return;
         try {
-            await getCollection('fees').doc(id.toString()).delete();
-            
+            const collectionRef = getCollection('fees');
+            await collectionRef.doc(entryData.id.toString()).set(entryData);
+        } catch (error) {
+            console.error('Firebase save error:', error);
+        }
+    }
+
+    function deleteFeeRecord(id) {
+        try {
             let localFees = JSON.parse(localStorage.getItem(getStorageKey('fees')) || '[]');
             localFees = localFees.filter(f => f.id != id);
             localStorage.setItem(getStorageKey('fees'), JSON.stringify(localFees));
+            
+            if (db) {
+                getCollection('fees').doc(id.toString()).delete()
+                    .catch(e => console.log('Firebase delete failed:', e));
+            }
+            
+            return true;
         } catch (error) {
             console.error('Error deleting fee:', error);
             throw error;
         }
     }
 
-    async function saveData() {
+    function saveData() {
         let paid = 0;
         let detailsArr = [];
         
@@ -1305,14 +1455,13 @@
             paid, 
             due: parseFloat(document.getElementById('valDue').value) || 0,
             details: detailsArr.length > 0 ? detailsArr.join(", ") : "নগদ গ্রহণ",
-            schoolId: SCHOOL_ID,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            schoolId: SCHOOL_ID
         };
 
         try {
-            const feeId = await saveFeeRecord(entryData);
+            const feeId = saveFeeRecord(entryData);
             
-            await saveIERecord({
+            saveIERecord({
                 refId: feeId,
                 date: entryData.date,
                 type: "Income",
@@ -1355,8 +1504,8 @@
         document.getElementById('saveBtn').innerText = "💰 ফি সেভ করুন";
     }
 
-    async function updateTable() {
-        const history = await loadFeeHistory();
+    function updateTable() {
+        const history = loadFeeHistory();
         let kIndi = document.getElementById('searchIndi').value.toUpperCase();
         let kCls = document.getElementById('searchCls').value;
         let kGrp = document.getElementById('searchGroup').value;
@@ -1401,8 +1550,8 @@
         document.getElementById('grandDue').innerText = '৳' + tDue;
     }
 
-    async function editItem(id) {
-        let history = await loadFeeHistory();
+    function editItem(id) {
+        let history = loadFeeHistory();
         let item = history.find(i => i.id == id);
         
         if (item) {
@@ -1455,15 +1604,15 @@
         }
     }
 
-    async function deleteItem(id) {
+    function deleteItem(id) {
         if(confirm("আপনি কি এই রেকর্ড মুছতে চান?")) {
             try {
-                await deleteFeeRecord(id);
+                deleteFeeRecord(id);
                 
-                let ieHistory = await loadIEHistory();
+                let ieHistory = loadIEHistory();
                 const ieItem = ieHistory.find(item => item.refId == id);
                 if (ieItem) {
-                    await deleteIERecord(ieItem.id);
+                    deleteIERecord(ieItem.id);
                 }
                 
                 updateTable();
@@ -1494,38 +1643,31 @@
         }
     }
 
-    async function loadIEHistory() {
+    function loadIEHistory() {
         try {
-            const snapshot = await getCollection('accounts')
-                .orderBy('date', 'desc')
-                .get();
-            
-            const history = [];
-            snapshot.forEach(doc => {
-                history.push({ id: doc.id, ...doc.data() });
-            });
-            return history;
-        } catch (error) {
-            console.error('Error loading IE:', error);
             const localIE = localStorage.getItem(getStorageKey('accounts'));
             return localIE ? JSON.parse(localIE) : [];
+        } catch (error) {
+            console.error('Error loading IE:', error);
+            return [];
         }
     }
 
-    async function saveIERecord(entryData) {
+    function saveIERecord(entryData) {
         try {
-            const collectionRef = getCollection('accounts');
+            let localIE = JSON.parse(localStorage.getItem(getStorageKey('accounts')) || '[]');
             
             if (!entryData.id) {
                 entryData.id = Date.now();
             }
             
-            await collectionRef.doc(entryData.id.toString()).set(entryData);
-            
-            let localIE = JSON.parse(localStorage.getItem(getStorageKey('accounts')) || '[]');
             localIE = localIE.filter(a => a.id !== entryData.id);
             localIE.push(entryData);
             localStorage.setItem(getStorageKey('accounts'), JSON.stringify(localIE));
+            
+            if (db) {
+                saveIEToFirebase(entryData).catch(e => console.log('Firebase save failed:', e));
+            }
             
             return entryData.id;
         } catch (error) {
@@ -1534,20 +1676,33 @@
         }
     }
 
-    async function deleteIERecord(id) {
+    async function saveIEToFirebase(entryData) {
+        if (!db) return;
         try {
-            await getCollection('accounts').doc(id.toString()).delete();
-            
+            const collectionRef = getCollection('accounts');
+            await collectionRef.doc(entryData.id.toString()).set(entryData);
+        } catch (error) {
+            console.error('Firebase save error:', error);
+        }
+    }
+
+    function deleteIERecord(id) {
+        try {
             let localIE = JSON.parse(localStorage.getItem(getStorageKey('accounts')) || '[]');
             localIE = localIE.filter(a => a.id != id);
             localStorage.setItem(getStorageKey('accounts'), JSON.stringify(localIE));
+            
+            if (db) {
+                getCollection('accounts').doc(id.toString()).delete()
+                    .catch(e => console.log('Firebase delete failed:', e));
+            }
         } catch (error) {
             console.error('Error deleting IE:', error);
             throw error;
         }
     }
 
-    async function saveIEData() {
+    function saveIEData() {
         const date = document.getElementById('ieDate').value || new Date().toISOString().split('T')[0];
         const type = document.getElementById('ieType').value;
         const category = document.getElementById('ieCategory').value;
@@ -1566,12 +1721,11 @@
             category,
             amount,
             description: desc || (type === 'Income' ? 'আয়' : 'খরচ'),
-            schoolId: SCHOOL_ID,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            schoolId: SCHOOL_ID
         };
 
         try {
-            await saveIERecord(entryData);
+            saveIERecord(entryData);
             document.getElementById('ieAmount').value = "";
             document.getElementById('ieDesc').value = "";
             updateIETable();
@@ -1582,8 +1736,8 @@
         }
     }
 
-    async function updateIETable() {
-        let ieHistory = await loadIEHistory();
+    function updateIETable() {
+        let ieHistory = loadIEHistory();
         let sDate = document.getElementById('ieSearchSDate').value;
         let eDate = document.getElementById('ieSearchEDate').value;
         let sType = document.getElementById('ieSearchType').value;
@@ -1614,10 +1768,10 @@
         });
     }
 
-    async function deleteIEItem(id) {
+    function deleteIEItem(id) {
         if(confirm("এই লেনদেন মুছবেন?")) {
             try {
-                await deleteIERecord(id);
+                deleteIERecord(id);
                 updateIETable();
                 calculateTotals();
             } catch (error) {
@@ -1626,8 +1780,8 @@
         }
     }
 
-    async function calculateTotals() {
-        let ieHistory = await loadIEHistory();
+    function calculateTotals() {
+        let ieHistory = loadIEHistory();
         let totalIn = 0, totalEx = 0;
         
         ieHistory.forEach(item => {
@@ -1728,8 +1882,8 @@
     }
 
     // ==================== PRINT FUNCTIONS ====================
-    async function printReceipt(id) {
-        let history = await loadFeeHistory();
+    function printReceipt(id) {
+        let history = loadFeeHistory();
         let item = history.find(i => i.id == id);
         let config = JSON.parse(localStorage.getItem(getStorageKey('appConfig'))) || 
                     { name: "আমার স্কুল", addr: "ঠিকানা", mob: "মোবাইল" };
@@ -1880,10 +2034,10 @@
         }, 500);
     }
 
-    async function printFullReport() {
+    function printFullReport() {
         const config = JSON.parse(localStorage.getItem(getStorageKey('appConfig'))) || 
                       { name: "আমার স্কুল", addr: "ঠিকানা" };
-        const history = await loadFeeHistory();
+        const history = loadFeeHistory();
         
         let tableHtml = `
             <table>
@@ -1957,10 +2111,10 @@
     }
 
     // ==================== BACKUP FUNCTIONS ====================
-    async function exportData() {
+    function exportData() {
         try {
-            const feeHistory = await loadFeeHistory();
-            const ieHistory = await loadIEHistory();
+            const feeHistory = loadFeeHistory();
+            const ieHistory = loadIEHistory();
             
             const data = { 
                 config: JSON.parse(localStorage.getItem(getStorageKey('appConfig'))),
@@ -1983,7 +2137,7 @@
         }
     }
 
-    async function importData(input) {
+    function importData(input) {
         if (input.files && input.files[0]) {
             let reader = new FileReader();
             reader.onload = async function(e) {
@@ -1997,21 +2151,14 @@
                     if(data.students && data.students.length > 0) {
                         students = data.students;
                         localStorage.setItem(getStorageKey('students'), JSON.stringify(students));
-                        await saveStudentListToFirebase().catch(e => console.log('Firebase save failed:', e));
                     }
                     
                     if(data.fees && data.fees.length > 0) {
                         localStorage.setItem(getStorageKey('fees'), JSON.stringify(data.fees));
-                        for (const fee of data.fees) {
-                            await saveFeeRecord(fee).catch(e => console.log('Firebase save failed:', e));
-                        }
                     }
                     
                     if(data.accounts && data.accounts.length > 0) {
                         localStorage.setItem(getStorageKey('accounts'), JSON.stringify(data.accounts));
-                        for (const acc of data.accounts) {
-                            await saveIERecord(acc).catch(e => console.log('Firebase save failed:', e));
-                        }
                     }
                     
                     alert("✅ ইম্পোর্ট সফল হয়েছে!");
@@ -2026,7 +2173,7 @@
     }
 
     // ==================== INITIALIZATION ====================
-    window.onload = async function() {
+    window.onload = function() {
         document.getElementById('schoolIdDisplay').innerText = SCHOOL_ID;
         
         const today = new Date().toISOString().split('T')[0];
@@ -2037,15 +2184,22 @@
             document.getElementById('ieDate').value = today;
         }
         
-        await loadStudentList();
+        // লোকাল স্টোরেজ থেকে নির্দেশনার অবস্থা লোড করুন
+        if (localStorage.getItem('instructionsHidden') === 'true') {
+            document.getElementById('securityAlert').classList.add('hidden');
+        }
+        
+        loadStudentList();
         loadSettings();
         updateTable();
         updateIETable(); 
         calculateTotals(); 
         updateIECategory();
         
-        checkFirebaseConnection();
-        setInterval(checkFirebaseConnection, 30000);
+        // Firebase connection check
+        setTimeout(() => {
+            checkFirebaseConnection();
+        }, 1000);
     };
 </script>
 </body>

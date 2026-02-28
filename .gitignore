@@ -1,0 +1,6 @@
+# Firebase config file
+config.js
+*.config.js
+.env
+*.key
+secrets/
